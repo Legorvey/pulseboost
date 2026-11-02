@@ -1,0 +1,163 @@
+================================================================================
+LAPORAN FINALISASI VALIDASI DAN INTEGRITAS METODOLOGI (TAHAP 9C)
+Proyek: KTI_XGBoost - Estimasi Tekanan Darah Cuffless & Saturasi Oksigen
+Status: VERIFIKASI SEBELUM PENGUJIAN TEST (Data TEST Tetap 100% Disegel Murni)
+Tanggal Pemeriksaan: 02 November 2026
+================================================================================
+
+1. VERIFIKASI HASIL EVALUASI MODEL VALIDASI (AUDIT REKOMPUTASI)
+--------------------------------------------------------------------------------
+Audit independen dilakukan dengan memuat ulang file prediksi validasi mentah
+(results/uci_validation_predictions_audit.csv dan results/osasud_validation_predictions_audit.csv)
+dan menghitung ulang seluruh metrik secara terpisah dari kode training awal.
+
+A. Rekonsiliasi Metrik SBP (Systolic Blood Pressure - UCI):
+   - Jumlah Sampel Validasi: 12.508 jendela (dari total 12.513 jendela; 5 jendela tanpa label ABP dieksklusi).
+   - Baseline Mean TRAIN (130.28 mmHg)   : MAE = 17.9867 mmHg, RMSE = 21.9423 mmHg, ME = +1.7279 mmHg, STD(ME) = 21.8751 mmHg, R = NaN (N/A)
+   - Baseline Median TRAIN (128.51 mmHg) : MAE = 17.8338 mmHg, RMSE = 21.8742 mmHg, ME = -0.0449 mmHg, STD(ME) = 21.8751 mmHg, R = NaN (N/A)
+   - XGBoost Config A (16 fitur, 990 it) : MAE = 13.8372 mmHg, RMSE = 17.9009 mmHg, ME = +1.4752 mmHg, STD(ME) = 17.8407 mmHg, R = 0.5793
+   - XGBoost Config B (17 fitur, 999 it) : MAE = 13.6023 mmHg, RMSE = 17.6630 mmHg, ME = +1.4717 mmHg, STD(ME) = 17.6023 mmHg, R = 0.5944
+   - XGBoost Config C (19 fitur, 999 it) : MAE = 13.2203 mmHg, RMSE = 17.2178 mmHg, ME = +1.2984 mmHg, STD(ME) = 17.1695 mmHg, R = 0.6208  [TERBAIK SBP]
+   - XGBoost Config D (4 fitur, 997 it)  : MAE = 15.0978 mmHg, RMSE = 19.3026 mmHg, ME = +1.5038 mmHg, STD(ME) = 19.2447 mmHg, R = 0.4758
+
+B. Rekonsiliasi Metrik DBP (Diastolic Blood Pressure - UCI):
+   - Jumlah Sampel Validasi: 12.508 jendela.
+   - Baseline Mean TRAIN (66.87 mmHg)    : MAE = 8.3272 mmHg, RMSE = 10.5566 mmHg, ME = +0.9139 mmHg, STD(ME) = 10.5174 mmHg, R = NaN (N/A)
+   - Baseline Median TRAIN (64.71 mmHg)  : MAE = 7.9603 mmHg, RMSE = 10.5907 mmHg, ME = -1.2476 mmHg, STD(ME) = 10.5174 mmHg, R = NaN (N/A)
+   - XGBoost Config A (16 fitur, 993 it) : MAE = 6.8474 mmHg, RMSE = 9.3460 mmHg, ME = +0.5678 mmHg, STD(ME) = 9.3291 mmHg, R = 0.4650
+   - XGBoost Config B (17 fitur, 999 it) : MAE = 6.8049 mmHg, RMSE = 9.3008 mmHg, ME = +0.5669 mmHg, STD(ME) = 9.2838 mmHg, R = 0.4735
+   - XGBoost Config C (19 fitur, 996 it) : MAE = 6.5667 mmHg, RMSE = 9.0670 mmHg, ME = +0.4999 mmHg, STD(ME) = 9.0536 mmHg, R = 0.5101  [TERBAIK DBP]
+   - XGBoost Config D (6 fitur, 994 it)  : MAE = 7.1832 mmHg, RMSE = 9.6596 mmHg, ME = +0.6705 mmHg, STD(ME) = 9.6367 mmHg, R = 0.4065
+
+C. Rekonsiliasi Metrik SpO2 (Saturasi Oksigen - OSASUD):
+   - Jumlah Sampel Validasi: 3.859 jendela (4 pasien validasi: ID 19, 21, 27, 30; 100% label SpO2 valid).
+   - Baseline Mean TRAIN (95.22 %)       : MAE = 2.4491 %, RMSE = 2.8526 %, ME = -1.8045 %, STD(ME) = 2.2096 %, R = NaN (N/A)
+   - Baseline Median TRAIN (96.00 %)     : MAE = 2.0387 %, RMSE = 2.4369 %, ME = -1.0284 %, STD(ME) = 2.2096 %, R = NaN (N/A)
+   - XGBoost Config A (16 fitur, 63 it)  : MAE = 2.2002 %, RMSE = 2.6165 %, ME = -1.6055 %, STD(ME) = 2.0663 %, R = 0.3834
+   - XGBoost Config B (17 fitur, 47 it)  : MAE = 2.1726 %, RMSE = 2.5641 %, ME = -1.6219 %, STD(ME) = 1.9862 %, R = 0.4452
+   - XGBoost Config C (19 fitur, 68 it)  : MAE = 2.1325 %, RMSE = 2.5546 %, ME = -1.5514 %, STD(ME) = 2.0298 %, R = 0.4354
+   - XGBoost Config D (2 fitur, 284 it)  : MAE = 1.6912 %, RMSE = 2.0742 %, ME = -0.8242 %, STD(ME) = 1.9037 %, R = 0.5079  [TERBAIK SpO2]
+
+D. Koreksi Penulisan Pearson R Baseline Konstan:
+   - Pada pelaporan Tahap 9B sebelumnya, Pearson R untuk Baseline Mean dan Median ditulis 0.0000.
+   - Secara definisi matematis, kovariansi dan varians dari vektor bernilai konstan adalah nol,
+     sehingga pembagian dengan nol terjadi: r = Cov(x, y) / (sigma_x * sigma_y) = 0 / 0 (tidak terdefinisi).
+   - Koreksi telah diterapkan pada file baru: results/xgboost_validation_metrics_corrected.csv,
+     di mana nilai r baseline konstan dicatat secara eksak sebagai NaN (N/A).
+
+E. Analisis Early Stopping & Batas Estimator:
+   - SBP Config C mencapai iterasi terbaik pada 999 (dari batas n_estimators=1000).
+   - DBP Config C mencapai iterasi terbaik pada 996 (dari batas n_estimators=1000).
+   - IMPLIKASI ILMIAH PENTING: Kedua model regresi tekanan darah tersebut berhenti karena
+     mencapai batas maksimum anggaran pohon (budget-bounded), BUKAN karena kurva galat validasi
+     telah berbalik arah (overfitting) dan memicu kesabaran early stopping 50 putaran.
+     Oleh karena itu, jangan mengklaim bahwa model SBP dan DBP telah mencapai konvergensi global penuh;
+     secara empiris model masih berada dalam fase penurunan galat gradual pada iterasi ke-1000.
+   - Sebaliknya, pada SpO2 Config A, B, dan C, early stopping terpicu sangat awal (iterasi 63, 47, dan 68).
+     Hal ini membuktikan bahwa penambahan 16-19 fitur pada data nokturnal antar-pasien menyebabkan
+     pohon keputusan overfit terhadap noise individual pasien pelatihan, sehingga galat validasi
+     memburuk setelah puluhan iterasi.
+   - SpO2 Config D (CFS) mencapai iterasi 284 dari 1000 dengan kurva konvergensi halus, menunjukkan
+     bahwa subset 2 fitur kompak mampu memfasilitasi generalisasi antar-subjek yang jauh lebih stabil.
+
+F. Verifikasi Fitur SpO2 Config D & Batasan Non-Kausalitas:
+   - Metadata model (models/spo2_config_d_metadata.json) membuktikan secara eksak bahwa
+     fitur prediktor SpO2 Config D hanya terdiri dari 2 fitur:
+         1. 'rise_time_s' (waktu naik denyut sistolik dalam detik)
+         2. 'max_ascending_slope' (kemiringan kenaikan sistolik maksimum)
+   - PERINGATAN METODOLOGIS: Algoritma CFS adalah metode seleksi statistik berbasis korelasi linear empiris
+     pada data sampel set TRAIN. Terpilihnya kedua fitur ini TIDAK membuktikan hubungan sebab-akibat (kausalitas)
+     fisiologis bahwa perubahan saturasi oksigen darah arteri disebabkan oleh perubahan kemiringan gelombang optik.
+     Hasil ini tidak boleh diinterpretasikan sebagai diagnosis klinis.
+
+
+2. VERIFIKASI PARAMETER PREPROCESSING AKTUAL (BARIS KODE AKTUAL)
+--------------------------------------------------------------------------------
+Pemeriksaan dilakukan langsung pada berkas kode produksi:
+- scripts/process_uci_full.py (Pemrosesan 12.000 rekaman UCI)
+- scripts/extract_osasud_features_full.py (Pemrosesan 30 pasien OSASUD)
+
+Berikut adalah parameter aktual yang berjalan pada implementasi kode:
+
+1. Jenis Filter:
+   - Chebyshev Type II (scipy.signal.cheby2).
+2. Orde Filter:
+   - UCI   : N = 4 (scripts/process_uci_full.py, baris 66: CHEBY_ORDER = 4)
+   - OSASUD: N = 4 (scripts/extract_osasud_features_full.py, baris 59: CHEBY_ORDER = 4)
+3. Parameter Redaman Stopband (rs) [KOREKSI PENTING DARI NARASI LAPORAN]:
+   - UCI   : rs = 20 dB (scripts/process_uci_full.py, baris 67: CHEBY_RS_DB = 20)
+   - OSASUD: rs = 20 dB (scripts/extract_osasud_features_full.py, baris 60: CHEBY_RS_DB = 20)
+   - Catatan Klarifikasi: Narasi pada laporan Tahap 9B sempat menyebut rs=40 dB atau 30-40 dB.
+     Kode aktual yang benar-benar memproses data final membuktikan bahwa rs=20 dB digunakan
+     secara konsisten pada kedua dataset sejak tahap pilot hingga eksekusi final.
+4. Frekuensi Kritis (Wn) dan Karakteristik Respon Frekuensi scipy.signal.cheby2:
+   - Parameter Kode: Wn = [0.5, 8.0] Hz
+   - Sampling Rate : UCI fs = 125 Hz, OSASUD fs = 80 Hz.
+   - PENEGASAN TEKNIS MATEMATIS PENTING:
+     Dalam pustaka scipy.signal.cheby2, parameter Wn BUKANLAH frekuensi batas -3 dB dari passband
+     (sebagaimana pada filter Butterworth). Pada Chebyshev Type II, Wn mendefinisikan frekuensi
+     tepi STOPBAND (stopband edge), yaitu titik frekuensi di mana atenuasi mulai mencapai
+     minimal rs (20 dB).
+     Berdasarkan evaluasi numerik respon frekuensi (sosfreqz):
+     * Pada UCI (fs=125 Hz)   : Batas passband riil (-3 dB) berada pada [0.625 Hz, 6.438 Hz].
+     * Pada OSASUD (fs=80 Hz) : Batas passband riil (-3 dB) berada pada [0.640 Hz, 6.480 Hz].
+     * Kedua filter memiliki respon passband yang flat murni (gain 0.0 dB pada ~2.0 Hz) tanpa ripple
+       pada daerah lolos, sehingga mempertahankan integritas morfologi puncak sistolik dan dikrotik.
+5. Implementasi Fase Nol (Zero-Phase Filtering):
+   - Menggunakan Second-Order Sections (sos) dan scipy.signal.sosfiltfilt
+     (UCI baris 335; OSASUD baris 473).
+   - Menghasilkan phase response nol murni tanpa pergeseran waktu (zero delay).
+6. Normalisasi Sinyal Z-Score:
+   - TIDAK DITERAPKAN pada sinyal mentah atau terfilter sebelum ekstraksi fitur.
+   - Skala unit mentah fotodetektor dipertahankan agar fitur amplitudo pulsa tidak kehilangan variasi fisiologis.
+7. Skewness SQI:
+   - Dihitung sebagai salah satu dari 15 prediktor model ('skewness'), BUKAN sebagai filter pembuang jendela.
+8. Indeks Kekakuan Arteri (Stiffness Index / SI):
+   - Tidak dihitung karena dataset sekunder tidak memiliki metadata tinggi badan subjek.
+9. Empat Rasio APG (b/a, c/a, d/a, e/a):
+   - Dipertahankan penuh sebagai kandidat fitur dengan kriteria representatif denyut (valid_beats >= 10, coverage >= 20%).
+
+
+3. INTEGRITAS ISOLASI DATA (ZERO DATA LEAKAGE)
+--------------------------------------------------------------------------------
+1. Set TEST (UCI: 12.514 jendela dari 1.435 rekaman; OSASUD: 4.706 jendela dari 5 pasien)
+   TIDAK PERNAH DIBUKA, DIMUAT, DIHITUNG STATISTIKNYA, ATAU DIEVALUASI PADA TAHAP INI.
+2. Baseline konstan mean dan median dihitung HANYA dari set TRAIN.
+3. Seleksi fitur CFS dihitung HANYA dari set TRAIN.
+4. Nilai median untuk imputasi sementara pada korelasi CFS difit HANYA pada set TRAIN.
+5. Early stopping dievaluasi HANYA pada set VALIDATION.
+6. Tidak ada identitas grup (record_id atau patient_id) yang tumpang tindih antara set TRAIN dan VALIDATION.
+
+
+4. KEPUTUSAN FINALISASI KANDIDAT MODEL (SEBELUM PENGUJIAN TEST)
+--------------------------------------------------------------------------------
+Berdasarkan bukti empiris evaluasi set validasi, ketiga model berikut ditetapkan
+secara definitif sebagai KANDIDAT MODEL AKHIR yang akan diuji pada set TEST:
+
+1. Kandidat Model 1 (SBP):
+   - Arsitektur : XGBoost Regressor
+   - Konfigurasi: Config C (Semua 19 Fitur PPG + APG)
+   - Validation MAE: 13.220 mmHg (Korelasi R = 0.6208)
+   - Berkas Model  : models/sbp_config_c.json
+   - Keterbatasan  : Model bersifat budget-bounded (berhenti di iterasi 999/1000). Hasil validasi
+     berbasis record-level grouping dan belum dapat diklaim memenuhi standar klinis AAMI/BHS.
+
+2. Kandidat Model 2 (DBP):
+   - Arsitektur : XGBoost Regressor
+   - Konfigurasi: Config C (Semua 19 Fitur PPG + APG)
+   - Validation MAE: 6.567 mmHg (Korelasi R = 0.5101)
+   - Berkas Model  : models/dbp_config_c.json
+   - Keterbatasan  : Budget-bounded (berhenti di iterasi 996/1000). Record-level grouping.
+
+3. Kandidat Model 3 (SpO2):
+   - Arsitektur : XGBoost Regressor
+   - Konfigurasi: Config D (CFS: 2 Fitur - rise_time_s, max_ascending_slope)
+   - Validation MAE: 1.691 % (Korelasi R = 0.5079; Rata-rata per pasien = 1.690 %)
+   - Berkas Model  : models/spo2_config_d.json
+   - Keterbatasan  : Galat meningkat pada kelompok desaturasi berat SpO2 < 90% (MAE = 7.76% pada n=18).
+     Model adalah estimasi optik non-invasif komputasional dan bukan pengganti alat medis tersertifikasi.
+
+KESIMPULAN:
+Tidak ada kendala fatal struktural yang menghalangi penggunaan ketiga kandidat model ini.
+Ketiga model siap untuk dievaluasi pada data set TEST pada Tahap 10 setelah persetujuan pengguna.
+================================================================================

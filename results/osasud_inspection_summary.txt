@@ -1,0 +1,23 @@
+================================================================================
+LAPORAN PENGAWAS MEMORI DATASET OSASUD - STATUS: DIHENTIKAN PENGAWAS
+Proyek  : Estimasi Tekanan Darah Cuffless dan SpO2 dari Sinyal PPG (KTI_XGBoost)
+Waktu   : 2026-11-02 06:06:03
+================================================================================
+
+[1. STATUS PENGHENTIAN DARURAT (EMERGENCY ABORT)]
+  - Status Eksekusi         : DIHENTIKAN_PENGAWAS (WATCHDOG_TERMINATED)
+  - Alasan Penghentian      : KONSUMSI_RSS_ANAK_BERLEBIH: RSS proses anak mencapai 7.18 GiB (melebihi batas aman 7.00 GiB)
+  - Durasi Berjalan         : 6.74 detik
+  - Puncak RSS Anak         : 7.18 GiB (Batas Aman: 7.00 GiB)
+  - RAM Tersedia Terendah   : 2.17 GiB (Ambang Kritis: 2.00 GiB)
+  - RAM Sistem Akhir        : 9.33 GiB tersedia dari 15.80 GiB
+
+[2. PERNYATAAN KEJUJURAN TEKNIS & KESIMPULAN]
+  1. Mekanisme pengawas (psutil watchdog) berhasil memotong proses anak sebelum terjadi crash
+     total atau OS freeze.
+  2. Ambang batas pengaman merupakan mitigasi praktis (best-effort safeguard), bukan jaminan
+     mutlak bebas crash OS.
+  3. Sesuai protokol keselamatan, TIDAK ADA PERCOBAAN ULANG OTOMATIS (no auto-retry).
+  4. Keterbatasan fisik RAM 16 GB mengharuskan penutupan seluruh program lain secara menyeluruh
+     sebelum mencoba kembali, atau mempertimbangkan metode pembacaan streaming/chunking.
+================================================================================

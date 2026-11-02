@@ -1,0 +1,152 @@
+================================================================================
+LAPORAN PEMERIKSAAN KESESUAIAN METODOLOGI BAB I vs IMPLEMENTASI AKTUAL PIPELINE
+Proyek: KTI_XGBoost - Estimasi Tekanan Darah Cuffless & Saturasi Oksigen
+Status: MODEL AWAL / PROVISIONAL VALIDATION (Bukan Hasil Uji Akhir KTI)
+Tanggal Pemeriksaan: 02 November 2026
+================================================================================
+
+1. RINGKASAN AUDIT
+--------------------------------------------------------------------------------
+Audit ini bertujuan memeriksa keselarasan antara naskah konseptual (Proposal/BAB I)
+dengan implementasi kode pra-pemrosesan sinyal dan ekstraksi fitur aktual pada repositori.
+Hasil audit menemukan beberapa klarifikasi dan penyesuaian metodologis penting yang
+wajib dicatat secara transparan dan jujur demi integritas ilmiah.
+
+
+2. ENAM BUTIR PERTANYAAN AUDIT METODOLOGIS
+--------------------------------------------------------------------------------
+
+[BUTIR 1: Z-Score Sinyal PPG Sebelum Ekstraksi Fitur]
+- Pertanyaan: Apakah z-score diterapkan pada sinyal PPG sebelum ekstraksi fitur?
+  Sebutkan lokasi implementasi dan rumusnya.
+- Temuan Lapangan & Kode: TIDAK DITERAPKAN.
+- Penjelasan Teknis:
+  Transformasi z-score pada sinyal mentah dirumuskan sebagai:
+      z(t) = (x(t) - mu_x) / sigma_x
+  Di mana mu_x adalah rata-rata amplitudo sinyal jendela dan sigma_x adalah deviasi standar.
+  Pada kode pemrosesan aktual (scripts/filter_uci_ppg.py baris 50-65, scripts/process_uci_full.py
+  baris 61-68, dan scripts/extract_osasud_features_full.py baris 81-88), sinyal PPG mentah
+  hanya melalui proses detrending dan zero-phase bandpass filtering Chebyshev Type II.
+  Sinyal terfilter langsung dialirkan ke fungsi deteksi puncak dan ekstraksi fitur
+  tanpa normalisasi z-score.
+- Alasan Metodologis:
+  Jika sinyal PPG dinormalisasi z-score per jendela, seluruh nilai amplitudo denyut
+  akan dipaksa memiliki varians 1. Hal ini akan memusnahkan informasi fisiologis absolut
+  seperti 'pulse_amplitude' dan 'pulse_area' yang berkorelasi langsung dengan kekuatan
+  kontraksi vaskular, elastisitas dinding pembuluh darah, dan tingkat tekanan darah (SBP/DBP).
+  Oleh karena itu, peniadaan z-score pada level sinyal adalah keputusan desain fisiologis
+  yang tepat untuk mempertahankan fitur amplitudo hemodinamik.
+
+
+[BUTIR 2: Penggunaan Skewness SQI (sSQI)]
+- Pertanyaan: Apakah Skewness SQI digunakan untuk membuang jendela, hanya sebagai warning,
+  atau digunakan dengan aturan lain?
+- Temuan Lapangan & Kode: TIDAK DIGUNAKAN UNTUK MEMBUANG JENDELA SECARA KERAS.
+- Penjelasan Teknis:
+  Berdasarkan audit kualitas pada scripts/audit_ppg_quality.py dan scripts/diagnose_quality_flags.py,
+  sSQI (kemencengan distribusi amplitudo PPG jendela 30 detik) dihitung sebagai salah satu
+  dari 15 fitur morfologi/statistik ('skewness').
+  Hasil investigasi empiris pada Rekaman 0 Part 1 membuktikan bahwa sSQI tunggal tidak dapat
+  membedakan artefak lokal: sebuah jendela dengan flatline parsial atau denyut patologis
+  masih dapat menghasilkan sSQI positif moderat (misalnya 0.524) yang tampak "ideal"
+  menurut kriteria Elgendi (2012).
+  Oleh karena itu, pembuangan jendela (discard) TIDAK didasarkan pada threshold sSQI,
+  melainkan menggunakan kriteria integritas fisiologis yang objektif:
+  a. Durasi rekaman minimal 30 detik (menolak rekaman TOO_SHORT).
+  b. Deteksi denyut fisiologis valid minimal 10 denyut per jendela 30 detik (Heart Rate 20-200 BPM).
+  c. Ketersediaan label referensi valid (SBP 50-250 mmHg, DBP 30-140 mmHg, SBP > DBP + 5 mmHg,
+     atau SpO2 50-100%).
+  Fitur 'skewness' tetap dimasukkan sebagai variabel prediktor numerik ke dalam model.
+
+
+[BUTIR 3: Indeks Kekakuan Arteri (Arterial Stiffness Index / SI)]
+- Pertanyaan: Apakah indeks kekakuan arteri benar-benar dihitung sebagai fitur?
+  Jika tidak, jelaskan keterbatasan data yang tersedia.
+- Temuan Lapangan & Kode: TIDAK DIHITUNG.
+- Penjelasan Teknis & Keterbatasan Data:
+  Dalam literatur fotopletismografi klinis (Millasseau dkk., 2002; Elgendi dkk., 2012),
+  Stiffness Index (SI) didefinisikan sebagai:
+      SI = h / Delta_T_DVP  (satuan: meter per detik, m/s)
+  Di mana:
+  - h adalah tinggi badan subjek (dalam meter).
+  - Delta_T_DVP adalah perbedaan waktu (time delay) antara puncak sistolik utama
+    dan gelombang pantul diastolik (diastolic reflection/dicrotic notch).
+  Keterbatasan Dataset:
+  Baik dataset UCI Cuffless Blood Pressure (format .mat dari PhysioNet/Kaggle) maupun
+  OSASUD (format NPZ/Pickle) adalah dataset sinyal teranonimkan sekunder yang TIDAK
+  menyediakan metadata antropometri subjek (tinggi badan, berat badan, usia, jenis kelamin).
+  Tanpa informasi tinggi badan pasien (h), formula SI tidak dapat dihitung secara valid
+  maupun fungsional.
+- Solusi Representatif:
+  Karakteristik elastisitas dan kekakuan vaskular tetap terwakili secara proksi melalui
+  fitur berbasis waktu pulsa ('rise_time_s', 'decay_time_s', 'pulse_width_50_s') serta
+  rasio turunan kedua APG ('apg_b_a', 'apg_c_a', 'apg_d_a', 'apg_e_a') yang mencerminkan
+  gelombang pantul arterial tanpa memerlukan variabel tinggi badan.
+
+
+[BUTIR 4: Kesesuaian Desain Filter Chebyshev Type II Orde 4]
+- Pertanyaan: Apakah filtering Chebyshev Type II orde 4 sesuai rancangan?
+- Temuan Lapangan & Kode: YA, 100% SESUAI RANCANGAN.
+- Penjelasan Teknis:
+  Spesifikasi filter yang diimplementasikan pada seluruh pipeline pemrosesan
+  (scripts/process_uci_full.py dan scripts/extract_osasud_features_full.py):
+  - Jenis Filter: Chebyshev Type II bandpass (scipy.signal.cheby2).
+  - Orde Filter: N = 4.
+  - Rentang Frekuensi Lolos: [0.5 Hz, 8.0 Hz].
+    (0.5 Hz menekan baseline wander/pernapasan, 8.0 Hz memangkas high-frequency noise
+    dan interferensi listrik tanpa mengaburkan dicrotic notch).
+  - Stopband Attenuation (Rs): 40 dB pada UCI (fs=125 Hz) dan 30-40 dB pada OSASUD (fs=80 Hz).
+  - Penerapan Fase Nol: Menggunakan Second-Order Sections (sos) dan forward-backward filtering
+    (scipy.signal.sosfiltfilt) sehingga distorsi pergeseran fase (phase delay) adalah nol murni,
+    memastikan titik puncak sistolik dan kaki denyut tepat pada lokasi temporal aslinya.
+
+
+[BUTIR 5: Status Keempat Rasio APG (b/a, c/a, d/a, e/a)]
+- Pertanyaan: Apakah APG b/a, c/a, d/a, e/a tetap dipertahankan sebagai kandidat?
+- Temuan Lapangan & Kode: YA, SELURUH 4 RASIO DIPERTAHANKAN.
+- Penjelasan Teknis:
+  Turunan kedua PPG (Acceleration Plethysmogram / APG) dihitung menggunakan filter
+  Savitzky-Golay orde 3 dengan window length 11 sampel (pada 125 Hz) atau 7 sampel (pada 80 Hz).
+  Titik fidusial a, b, c, d, e dideteksi per denyut dengan validasi temporal ketat.
+  Untuk menjaga keandalan statistik per jendela 30 detik:
+  - Rasio APG dihitung sebagai median rasio beat-level.
+  - Syarat representatif: jendela harus memiliki minimal 10 denyut valid dan minimal 20% denyut
+    memiliki deteksi titik terkait yang terverifikasi (apg_reliable_coverage).
+  - Jendela yang tidak memenuhi syarat representatif memiliki nilai NaN pada kolom rasio tersebut.
+  - Nilai NaN ini sengaja TIDAK dihapus atau diimputasi arbitrer pada data model-ready,
+    karena XGBoost mendukung penanganan nilai hilang secara native (missing value default direction).
+
+
+[BUTIR 6: Transformasi Z-Score Sinyal vs Standardisasi Fitur Model]
+- Pertanyaan: Apakah terdapat transformasi z-score pada sinyal versus standardisasi
+  fitur model? Bedakan kedua konsep tersebut.
+- Penjelasan Komparatif Konseptual:
+  1. Z-Score Sinyal (Signal Domain Normalization):
+     - Domain: Deret waktu kontinu 1D per jendela.
+     - Operasi: Mengubah sinyal ppg(t) menjadi z(t) = (ppg(t) - mu) / sigma.
+     - Dampak: Mengaburkan besaran tegangan dan volume pulsasi asli; menghilangkan korelasi
+       amplitudo vaskular dengan tekanan darah. Tidak diterapkan dalam pipeline ini.
+  2. Standardisasi Fitur Model (Tabular Feature Scaling):
+     - Domain: Matriks data tabular 2D (sampel x fitur) pada set TRAIN.
+     - Operasi: Mengubah kolom fitur f_j menjadi z_ij = (f_ij - mu_j) / sigma_j.
+     - Kebutuhan pada Algoritma: Sangat krusial untuk regresi linier, ridge/lasso, SVM,
+       dan neural network karena bergantung pada gradien dan perhitungan jarak Euclidean.
+     - Kebutuhan pada XGBoost: TIDAK DIPERLUKAN. Algoritma decision tree berbasis histogram
+       (tree_method="hist") hanya mengevaluasi urutan nilai (ranking split thresholds)
+       dari masing-masing fitur secara univariat per node, sehingga secara matematis bersifat
+       invarian terhadap skala (scale-invariant) dan transformasi monotonik fitur.
+     - Risiko Data Leakage: Jika standardisasi fitur dilakukan pada keseluruhan dataset
+       sebelum partisi train/val/test, parameter mu_j dan sigma_j akan membocorkan informasi
+       distribusi data validasi dan uji ke dalam tahap pelatihan model.
+
+
+3. KESIMPULAN DAN STATUS MODEL
+--------------------------------------------------------------------------------
+1. Perbedaan antara naskah BAB I konseptual dan implementasi aktual telah diuraikan
+   secara transparan dan didasarkan pada pertimbangan fisiologis serta metodologis komputasi.
+2. Tidak ada perubahan tersembunyi (silent changes) yang dilakukan.
+3. Seluruh eksperimen pelatihan dan evaluasi pada Tahap 9B ini berstatus:
+   "MODEL AWAL / PROVISIONAL VALIDATION".
+4. Hasil evaluasi pada set validasi ini BELUM merupakan hasil pengujian akhir KTI,
+   dan data set TEST tetap disegel murni (unseen) sampai tahap pengujian akhir.
+================================================================================

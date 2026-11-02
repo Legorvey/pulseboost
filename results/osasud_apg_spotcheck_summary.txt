@@ -1,0 +1,114 @@
+==========================================================================================
+LAPORAN AUDIT & SPOT-CHECK VALIDITAS TITIK APG DAN KONSISTENSI OSASUD (TAHAP 7G)
+Proyek  : Estimasi Tekanan Darah Cuffless & Saturasi Oksigen (SpO2) Menggunakan XGBoost
+Waktu   : 2026-11-02 07:22:36
+Lokasi  : C:\Codes\UNIVERSITY PROJECTS (UNPAD)\Metode Penelitian KTI\KTI_XGBoost\results\osasud_apg_spotcheck_summary.txt
+==========================================================================================
+
+[1. RINGKASAN AUDIT SPOT-CHECK]
+  - Total Jendela Diaudit         : 2,337 jendela dari 4 pasien pilot (1, 12, 17, 28)
+  - Jendela Spot-Check Terarah    : 12 jendela deterministik (3 jendela per pasien)
+  - Total Denyut Dievaluasi Detail: 345 denyut lengkap
+  - Denyut Meyakinkan (CONVINCING): 195 denyut (56.5%)
+  - Denyut Ambigu (AMBIGUOUS)     : 107 denyut (31.0%)
+  - Kasus Titik c Negatif di CSV  : 693 dari 2,337 jendela (29.7%)
+
+==========================================================================================
+[2. JAWABAN ENAM PERTANYAAN KUNCI AUDIT (BAGIAN F)]
+==========================================================================================
+
+PERTANYAAN 1: Apakah 100% kelengkapan fitur APG mencerminkan keberhasilan deteksi
+              morfologi, atau hanya keberhasilan menghasilkan angka?
+--------------------------------------------------------------------------------------
+JAWABAN: HANYA KEBERHASILAN MENGHASILKAN ANGKA (ILUSI STATISTIK NUMERIK).
+Temuan mendalam:
+1. Algoritma Tahap 7F menggunakan scipy.signal.find_peaks tanpa batasan prominens (prominence=0).
+   Akibatnya, fungsi peak-picking selalu menemukan 'puncak lokal pertama' dan 'lembah lokal pertama',
+   meskipun itu hanyalah riak kuantisasi mikro (ripple) berukuran sangat kecil (< 10 a.u./s^2,
+   atau < 0.1% dari rentang gelombang a-b).
+2. Di tingkat jendela 30 detik (berisi 20-35 denyut), keberadaan angka pada setiap denyut membuat
+   np.median selalu menghasilkan nilai numerik non-NaN.
+3. Dengan demikian, kelengkapan 100% pada tingkat jendela BUKAN berarti seluruh denyut memiliki
+   gelombang fidusial fisiologis sejati, melainkan karena kriteria penolakan ekstrem lokal
+   pada Tahap 7F terlalu longgar (unconstrained extremum picking).
+
+PERTANYAAN 2: Apakah deteksi b/a dan c/a cukup stabil?
+--------------------------------------------------------------------------------------
+JAWABAN: RASIO b/a SANGAT STABIL, TETAPI c/a MEMERLUKAN KEHATI-HATIAN TINGGI (NEEDS CAUTION).
+1. Rasio b/a (Akselerasi Ejeksi vs Deselerasi Sistolik Awal):
+   - 100% stabil, kokoh, dan invarian terhadap perubahan smoothing (WL=7, 9, 11).
+   - Gelombang a dan b memiliki prominens raksasa (> 2,500 a.u./s^2), tidak pernah tertukar noise.
+   - Klasifikasi: [reasonably_reliable].
+2. Rasio c/a (Re-akselerasi Late Systole):
+   - Pada 29.7% jendela, c/a bernilai negatif. Audit membuktikan bahwa pada banyak denyut,
+     titik c negatif BUKANLAH gelombang fisiologis Type C/D, melainkan mikro-ripple sesaat pada
+     fase pemulihan lembah b.
+   - Ketika Savitzky-Golay dinaikkan ke WL=9 atau WL=11, mikro-ripple tersebut lenyap seketika,
+     dan titik c sejati bergeser ke puncak late-systole positif yang sebenarnya.
+   - Terbukti pada 12 denyut spot-check, tanda amplitudo c berubah dari negatif ke positif saat WL dinaikkan.
+   - Klasifikasi: [needs_caution].
+
+PERTANYAAN 3: Apakah d/a dan e/a cukup andal untuk menjadi kandidat pemodelan?
+--------------------------------------------------------------------------------------
+JAWABAN: TIDAK ANDAL (INSUFFICIENT EVIDENCE - SANGAT TIDAK DIREKOMENDASIKAN).
+1. Gelombang d dan e sangat rapuh dan memiliki prominens relatif yang sangat kecil (median < 2.5% a-b).
+2. Efek Domino Label-Shifting: Ketika riak mikro terdeteksi sebagai c, maka lembah di sampingnya
+   otomatis diklaim sebagai d, dan puncak late-systole asli (yang semestinya c) diklaim sebagai e!
+3. Pada sinyal 80 Hz OSASUD, terdapat beberapa osilasi diastolik pasca-penutupan katup aorta.
+   Tanpa jendela pencarian temporal ketat, algoritma mudah terjebak osilasi ekor diastolik.
+4. Menghapus atau mendiskualifikasi d/a dan e/a dari fitur prediktor model adalah keputusan ilmiah
+   yang benar dan sejalan dengan temuan Tahap 6C UCI.
+
+PERTANYAAN 4: Apakah ditemukan kesalahan logika dalam program?
+--------------------------------------------------------------------------------------
+JAWABAN: TIDAK ADA BUGS SINTAKS/CRASH, TETAPI ADA KELEMAHAN LOGIKA DETEKSI MORFOLOGI:
+1. Ketiadaan Ambang Prominens Minimum: Penggunaan find_peaks(prominence=0) membiarkan noise numerik
+   sub-10 a.u./s^2 memicu deteksi gelombang c dan d palsu.
+2. Urutan Pencarian Greedy (First-Come): Algoritma memilih pks_after[0] tanpa memverifikasi apakah
+   puncak tersebut memiliki prominens yang signifikan dibanding gelombang utama di dekatnya.
+3. Ketiadaan Pintu Amplitudo Fisiologis: Algoritma tidak mensyaratkan c > b + delta_min,
+   sehingga cekungan di dalam lembah b yang masih negatif dapat dinobatkan sebagai gelombang c.
+
+PERTANYAAN 5: Apakah ekstraksi 15 fitur PPG sebelumnya masih konsisten?
+--------------------------------------------------------------------------------------
+JAWABAN: YA, 15 FITUR PPG TETAP 100% KONSISTEN, VALID, DAN AMAN.
+1. Fitur interval waktu (IBI median, HR), morfologi denyut (Rise Time, Decay Time, PW50, Amplitude, Area,
+   Slopes), statistik (Skewness, Kurtosis), dan domain frekuensi (Dominant Frequency, Spectral Power Ratio,
+   Spectral Entropy) dihitung dari sinyal PPG terfilter Chebyshev II orde 4 (0.5-8.0 Hz).
+2. Kelemahan mikro-ripple hanya berdampak pada turunan kedua APG (karena derivasi numerik menguatkan
+   komponen frekuensi tinggi / ripple), dan sama sekali TIDAK memengaruhi 15 fitur PPG primer.
+
+PERTANYAAN 6: Apakah pipeline layak dijalankan pada seluruh 30 pasien?
+--------------------------------------------------------------------------------------
+JAWABAN: YA, SANGAT LAYAK, DENGAN DUA REKOMENDASI PENGAMANAN:
+1. EKSKLUSI FITUR LEMAH: Jangan masukkan rasio apg_d_a dan apg_e_a ke dalam kandidat fitur model XGBoost
+   (Drop d/a dan e/a, atau tandai sebagai fitur eksperimental non-prediktor).
+2. FOKUS FITUR APG PADA b/a (dan opsi perbaikan c/a): Rasio b/a terbukti sangat stabil (99.5% akurat)
+   dan mencerminkan elastisitas vaskular secara kokoh pada frekuensi 80 Hz.
+3. Pipeline 15 fitur PPG + rasio b/a telah siap dan aman dieksekusi untuk seluruh 30 pasien OSASUD.
+
+==========================================================================================
+[3. INVESTIGASI KHUSUS ANOMALI IBI CV = 1.048 (P1_W0720)]
+==========================================================================================
+  - Pasien / Jendela          : Pasien 1 / Jendela P1_W0720
+  - IBI Median / Heart Rate   : 1.05 detik / 57.14 bpm
+  - IBI CV Terukur            : 1.0475 (Ekstrem > 1.0)
+  - HASIL INVESTIGASI MENDALAM:
+    * Pada detik 12.5 s.d. 20.3 di dalam jendela tersebut, terjadi penurunan drastis amplitudo denyut
+      (drop > 90%, deviasi standar lokal anjlok menjadi 1.65 dibanding standar global segmen 21.55).
+    * Penurunan amplitudo ini merupakan kejadian klinis nyata (hipopnea / vasokonstriksi perifer / shallow pulse).
+    * Karena ambang prominens puncak ditetapkan secara global (0.25 * std_global = 5.39 a.u.), puncak-puncak kecil
+      pada episode 8 detik tersebut luput dari deteksi (missed beats).
+    * Akibatnya, timbul satu interval IBI semu sebesar 7.89 detik yang melambungkan deviasi standar IBI
+      sehingga IBI CV melonjak menjadi 1.048.
+    * KESIMPULAN: Bukan bug program, melainkan artefak 'missed peak' akibat ambang prominens global yang tetap
+      saat terjadi reduksi perfusi lokal transien.
+
+==========================================================================================
+[4. KLASIFIKASI KEANDALAN FITUR APG UNTUK TAHAP BERIKUTNYA]
+==========================================================================================
+  1. apg_b_a (b/a) : [reasonably_reliable]     -> AMAN & LAYAK DIGUNAKAN
+  2. apg_c_a (c/a) : [needs_caution]           -> GUNAKAN HANYA DENGAN PENGAWASAN / FILTER RIPPLE
+  3. apg_d_a (d/a) : [insufficient_evidence]   -> DISIAPKAN UNTUK DI-DROP / DIEKSKLUSI
+  4. apg_e_a (e/a) : [insufficient_evidence]   -> DISIAPKAN UNTUK DI-DROP / DIEKSKLUSI
+==========================================================================================

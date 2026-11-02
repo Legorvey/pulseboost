@@ -1,0 +1,62 @@
+==========================================================================================
+DOKUMEN INTEGRITAS EVALUASI TEST FINAL (TAHAP 10 AUDIT TRAIL)
+Proyek : Estimasi Tekanan Darah Cuffless & Saturasi Oksigen Menggunakan XGBoost
+Waktu  : 2026-11-02 09:10:18
+Durasi : 2.41 detik
+==========================================================================================
+
+[1. LINGKUNGAN EKSEKUSI & VERSI SOFTWARE]
+------------------------------------------------------------------------------------------
+  - Operating System : win32 (Windows)
+  - Python Version   : 3.13.2
+  - XGBoost Version  : 3.4.1
+  - Pandas Version   : 3.1.0
+  - NumPy Version    : 2.5.4
+
+[2. BUKTI BERKAS MODEL DAN PARAMETER YANG DIGUNAKAN]
+------------------------------------------------------------------------------------------
+  - SBP Model File   : C:\Codes\UNIVERSITY PROJECTS (UNPAD)\Metode Penelitian KTI\KTI_XGBoost\models\sbp_config_c.json (best_iteration=999)
+  - SBP Features (19): ibi_median_s, heart_rate_bpm, ibi_cv, rise_time_s, decay_time_s, pulse_width_50_s, pulse_amplitude, pulse_area, max_ascending_slope, min_descending_slope, skewness, kurtosis, dominant_frequency_hz, spectral_power_ratio, spectral_entropy, apg_b_a, apg_c_a, apg_d_a, apg_e_a
+  - DBP Model File   : C:\Codes\UNIVERSITY PROJECTS (UNPAD)\Metode Penelitian KTI\KTI_XGBoost\models\dbp_config_c.json (best_iteration=996)
+  - DBP Features (19): ibi_median_s, heart_rate_bpm, ibi_cv, rise_time_s, decay_time_s, pulse_width_50_s, pulse_amplitude, pulse_area, max_ascending_slope, min_descending_slope, skewness, kurtosis, dominant_frequency_hz, spectral_power_ratio, spectral_entropy, apg_b_a, apg_c_a, apg_d_a, apg_e_a
+  - SpO2 Model File  : C:\Codes\UNIVERSITY PROJECTS (UNPAD)\Metode Penelitian KTI\KTI_XGBoost\models\spo2_config_d.json (best_iteration=284)
+  - SpO2 Features (2): rise_time_s, max_ascending_slope
+
+[3. AUDIT 10 PEMERIKSAAN KEAMANAN SEBELUM EVALUASI TEST]
+------------------------------------------------------------------------------------------
+  [PASSED] Berkas manifest_selection  : ADA (final_model_selection_manifest.json, size=6,378 bytes)
+  [PASSED] Berkas data_readiness      : ADA (ml_data_readiness_summary.txt, size=4,650 bytes)
+  [PASSED] Berkas uci_manifest        : ADA (uci_split_manifest.csv, size=471,406 bytes)
+  [PASSED] Berkas osasud_manifest     : ADA (osasud_split_manifest.csv, size=440 bytes)
+  [PASSED] Berkas uci_data            : ADA (uci_features_model_ready_v1.csv, size=21,477,239 bytes)
+  [PASSED] Berkas osasud_data         : ADA (osasud_features_model_ready_v1.csv, size=12,266,119 bytes)
+  [PASSED] Berkas sbp_model           : ADA (sbp_config_c.json, size=2,006,680 bytes)
+  [PASSED] Berkas sbp_meta            : ADA (sbp_config_c_metadata.json, size=1,194 bytes)
+  [PASSED] Berkas dbp_model           : ADA (dbp_config_c.json, size=2,007,926 bytes)
+  [PASSED] Berkas dbp_meta            : ADA (dbp_config_c_metadata.json, size=1,191 bytes)
+  [PASSED] Berkas spo2_model          : ADA (spo2_config_d.json, size=571,104 bytes)
+  [PASSED] Berkas spo2_meta           : ADA (spo2_config_d_metadata.json, size=824 bytes)
+  [PASSED] Daftar, jumlah, dan urutan fitur ketiga model 100% konsisten dengan metadata.
+  [PASSED] Prediktor terverifikasi murni 19 fitur fisiologis PPG/APG kandidat sah.
+  [PASSED] UCI Record-Wise Split terverifikasi: 0 dari 9,624 record_id tumpang tindih.
+  [PASSED] OSASUD Patient-Wise Split terverifikasi: 0 dari 30 patient_id tumpang tindih.
+  [PASSED] Meta-Group UCI terverifikasi: Seluruh 9,611 kelompok duplikat berada pada split yang sama.
+  [PASSED] Keunikan jendela terverifikasi: UCI duplikat=0, OSASUD duplikat=0.
+  [PASSED] Seleksi model resmi terbukti dikunci sebelum evaluasi TEST (berdasarkan hasil validasi Tahap 9C).
+  [PASSED] Status: SELURUH 10 PEMERIKSAAN KEAMANAN LULUS 100%. EVALUASI TEST DIIZINKAN.
+
+[4. PERNYATAAN ILMIAH TENTANG DATA LEAKAGE DAN BATASAN RISET]
+------------------------------------------------------------------------------------------
+  1. Ketiadaan ID Pasien pada Dataset UCI:
+     Dataset UCI Cuffless Blood Pressure Estimation (Kaggle/PhysioNet) tidak menyertakan
+     identitas pasien biologis. Partisi record-grouped berhasil mengisolasi segmen rekaman
+     dan kelompok rekaman duplikat identik, namun potensi rekaman dari subjek yang sama
+     masuk ke set berbeda TIDAK DAPAT DITIADAKAN secara mutlak karena keterbatasan metadata asli.
+  2. Independensi Pasien pada Dataset OSASUD:
+     Dataset OSASUD memiliki metadata identitas 30 pasien terverifikasi. Partisi dilakukan
+     secara patient-wise murni (21 Train, 4 Val, 5 Test), sehingga independensi subjek
+     pada estimasi SpO2 terjamin 100% tanpa kebocoran pasien.
+  3. Batasan Klaim Klinis:
+     Penelitian ini adalah latihan akademis dan karya ilmiah sarjana (KTI), BUKAN pengujian
+     alat kesehatan atau sertifikasi klinis standar AAMI/BHS/ISO.
+==========================================================================================

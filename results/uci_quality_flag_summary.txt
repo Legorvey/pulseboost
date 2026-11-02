@@ -1,0 +1,114 @@
+==============================================================================
+LAPORAN DIAGNOSIS FALSE ALARM SISTEM PENILAIAN KUALITAS PPG (TAHAP 5C)
+Berkas: uci_quality_audit.csv | Total Sampel: 45 Jendela (30 detik)
+==============================================================================
+
+[1. MENGAPA 41 DARI 45 JENDELA MEMPEROLEH LABEL 'REVIEW_NEEDED'?]
+Penyebab utamanya adalah 'Zero-Tolerance Multi-Triggering' (aturan OR biner yang terlalu ketat):
+Setiap jendela yang memiliki MINIMAL SATU dari tiga kondisi:
+  (num_amp_outliers > 0) ATAU (num_ibi_outliers > 0) ATAU (clipping_samples > 0)
+langsung diberi label 'review_needed'.
+Dalam jendela 30 detik berisi ~60 denyut jantung dan 3.750 sampel, probabilitas sebuah sinyal
+biologis manusia memiliki fluktuasi normal pada 1 denyut saja mendekati 100%.
+
+[2. PENGURAIAN INDIKATOR INDIVIDUAL (JUMLAH JENDELA YANG DITANDAI)]
+1. Skewness SQI (<0.20 atau >0.85)       : 0 jendela (0.0%) - Seluruh 45 jendela lulus
+2. Outlier Amplitudo Denyut (>0 pencilan)  : 39 jendela (86.7%) - PENYEBAB TERBESAR!
+   * Hanya 1 denyut pencilan (1/60 beat)   : 9 jendela (20.0%) [Kemungkinan besar False Alarm]
+   * 1 s.d. 3 denyut pencilan              : 21 jendela (46.7%) [Variasi respirasi normal]
+   * >= 4 denyut pencilan (anomali nyata)  : 18 jendela (40.0%)
+3. Outlier Interval Antardenyut (>0 IBI)  : 24 jendela (53.3%)
+   * Hanya 1 denyut IBI berbeda            : 8 jendela (17.8%) [Jitter sampling 8ms / sinus arrhythmia]
+   * >= 2 denyut IBI berbeda               : 16 jendela (35.6%) [Termasuk aritmia fisiologis]
+4. Dugaan Clipping (>0 sampel)            : 16 jendela (35.6%)
+   * Minor (< 20 sampel / < 0.5% durasi)   : 12 jendela (22.2%) [Belum terverifikasi fisik ADC]
+   * Major (>= 20 sampel)                  : 4 jendela (13.3%)
+5. NaN atau Infinity                      : 0 jendela (0.0%) - Semua data numerik valid
+6. Flatline / Amplitudo Hampir Konstan    : 0 jendela (0.0%) - Seluruh jendela memiliki denyut aktif
+7. Jumlah Denyut Tidak Mencukupi (<15 beat): 0 jendela (0.0%) - Rata-rata 59.4 denyut/30s
+
+[3. ANALISIS IMPLEMENTASI MAD (MEDIAN ABSOLUTE DEVIATION)]
+1. Masalah Skala Terlalu Sensitif:
+   Pada rekaman berkualitas tinggi, sebaran tinggi denyut sangat homogen (MAD amplitudo hanya 0.035 - 0.050 a.u.).
+   Akibatnya, batas pencilan (3 x 1.4826 x MAD) menjadi sangat sempit (~0.18 a.u., atau hanya ~9% dari amplitudo).
+   Pada tubuh manusia, pernapasan normal (inhalasi vs ekshalasi) menyebabkan variasi tekanan intratoraks yang
+   secara fisiologis mengubah tinggi puncak PPG sebesar 5% s.d. 15% (Respiratory-Induced Amplitude Modulation / RIAM).
+   Menandai jendela hanya karena 1 denyut terpengaruh napas adalah false alarm murni.
+2. Penanganan MAD = 0:
+   Ketika seluruh denyut memiliki nilai yang sama persis (MAD = 0), pembagian langsung menghasilkan pembagian dengan nol.
+   Solusi aman: gunakan batas bawah resolusi (floor) minimal 16 ms untuk IBI dan 0.05 a.u. untuk amplitudo.
+3. Prinsip Non-Diagnostik:
+   Ketidakteraturan interval (seperti pada Rekaman 1) tidak boleh langsung divonis sebagai 'artefak sensor' maupun
+   'diagnosis medis klinis definitif' karena PPG adalah sinyal optik perifer tanpa sadapan listrik 12-lead ECG.
+
+[4. HASIL PEMISAHAN STATUS (PROCESSING_VALID VS QUALITY_WARNING)]
+- processing_valid = True  : 45 dari 45 jendela (100.0%)
+  Artinya: SECARA TEKNIS SELURUH JENDELA DAPAT DIPROSES (0 jendela korup / rusak komputasi).
+- Dari 41 jendela yang sebelumnya diberi label 'review_needed':
+  * 13 jendela (28.9%) HANYA mengalami variasi fisiologis ringan (False Alarm sistem sensitif).
+  * 28 jendela (62.2%) memperlihatkan anomali substantif yang layak dicatat (drop amplitudo 50%, aritmia nyata, clipping).
+  * 4 jendela (8.9%) benar-benar bersih tanpa catatan.
+
+[5. TABEL LENGKAP 45 JENDELA (RECORD, WINDOW, METRIK, DAN STATUS)]
+Rec Win   Waktu (s)   Skew Peaks AmpOut IBIOut  Clip ProcValid            WarningSeverity Alasan Warning
+-------------------------------------------------------------------------------------------------------------------
+  0   0        0-30  0.533    61      0      0     0      True                       none  none
+  0   1       30-60  0.503    61      7      1     0      True        substantive_anomaly  amp_deviation(outliers=7,max_dev=0.99); mild_ibi_jitter(1_beat)
+  0   2       60-90  0.524    61      6      1     0      True        substantive_anomaly  amp_deviation(outliers=6,max_dev=0.89); mild_ibi_jitter(1_beat)
+  0   3      90-120  0.562    62      1      0     0      True mild_physiological_variation  mild_amp_variation(1_beats_likely_RIAM)
+  0   4     120-150  0.551    62      1      0     0      True mild_physiological_variation  mild_amp_variation(1_beats_likely_RIAM)
+  0   5     150-180  0.529    61      3      2    11      True        substantive_anomaly  amp_deviation(outliers=3,max_dev=0.92); rhythm_irregularity(2_ibi_outliers); exploratory_clipping_minor(11_samples)
+  0   6     180-210  0.477    61     10      4    32      True        substantive_anomaly  amp_deviation(outliers=10,max_dev=1.52); rhythm_irregularity(4_ibi_outliers); exploratory_clipping_major(32_samples)
+  0   7     210-240  0.574    61      5      3     0      True        substantive_anomaly  amp_deviation(outliers=5,max_dev=0.59); rhythm_irregularity(3_ibi_outliers)
+  0   8     240-270  0.549    61      3      2     0      True        substantive_anomaly  amp_deviation(outliers=3,max_dev=0.52); rhythm_irregularity(2_ibi_outliers)
+  0   9     270-300  0.583    61      2      0     0      True mild_physiological_variation  mild_amp_variation(2_beats_likely_RIAM)
+  0  10     300-330  0.502    60     14      2     0      True        substantive_anomaly  amp_deviation(outliers=14,max_dev=1.28); rhythm_irregularity(2_ibi_outliers)
+  0  11     330-360  0.575    61      1      0     0      True mild_physiological_variation  mild_amp_variation(1_beats_likely_RIAM)
+  0  12     360-390  0.574    61      3      0     0      True        substantive_anomaly  amp_deviation(outliers=3,max_dev=0.67)
+  0  13     390-420  0.568    61      0      1     0      True mild_physiological_variation  mild_ibi_jitter(1_beat)
+  0  14     420-450  0.567    61      1      0     0      True mild_physiological_variation  mild_amp_variation(1_beats_likely_RIAM)
+  0  15     450-480  0.553    61      1      0     0      True mild_physiological_variation  mild_amp_variation(1_beats_likely_RIAM)
+  1   0        0-30  0.603    59      2      4     0      True        substantive_anomaly  amp_deviation(outliers=2,max_dev=0.63); rhythm_irregularity(4_ibi_outliers)
+  1   1       30-60  0.558    59      2      2    17      True        substantive_anomaly  amp_deviation(outliers=2,max_dev=1.51); rhythm_irregularity(2_ibi_outliers); exploratory_clipping_minor(17_samples)
+  1   2       60-90  0.641    58      1      0     0      True mild_physiological_variation  mild_amp_variation(1_beats_likely_RIAM)
+  1   3      90-120  0.610    58      6      1    11      True        substantive_anomaly  amp_deviation(outliers=6,max_dev=1.44); mild_ibi_jitter(1_beat); exploratory_clipping_minor(11_samples)
+  1   4     120-150  0.536    58     10      3    13      True        substantive_anomaly  amp_deviation(outliers=10,max_dev=1.38); rhythm_irregularity(3_ibi_outliers); exploratory_clipping_minor(13_samples)
+  1   5     150-180  0.482    59      2      2     5      True        substantive_anomaly  amp_deviation(outliers=2,max_dev=0.97); rhythm_irregularity(2_ibi_outliers); exploratory_clipping_minor(5_samples)
+  1   6     180-210  0.572    60      0      0     0      True                       none  none
+  1   7     210-240  0.425    59      9      4    15      True        substantive_anomaly  amp_deviation(outliers=9,max_dev=1.79); rhythm_irregularity(4_ibi_outliers); exploratory_clipping_minor(15_samples)
+  1   8     240-270  0.481    60      5      2    11      True        substantive_anomaly  amp_deviation(outliers=5,max_dev=1.03); rhythm_irregularity(2_ibi_outliers); exploratory_clipping_minor(11_samples)
+  1   9     270-300  0.588    60      0      0     0      True                       none  none
+  1  10     300-330  0.573    60      0      0     0      True                       none  none
+  1  11     330-360  0.537    60      8      0     0      True        substantive_anomaly  amp_deviation(outliers=8,max_dev=0.86)
+  1  12     360-390  0.588    60      4      0     0      True        substantive_anomaly  amp_deviation(outliers=4,max_dev=0.70)
+  1  13     390-420  0.569    61      1      0     0      True mild_physiological_variation  mild_amp_variation(1_beats_likely_RIAM)
+  1  14     420-450  0.437    59     12      1    29      True        substantive_anomaly  amp_deviation(outliers=12,max_dev=1.25); mild_ibi_jitter(1_beat); exploratory_clipping_major(29_samples)
+  1  15     450-480  0.593    60      1      0     0      True mild_physiological_variation  mild_amp_variation(1_beats_likely_RIAM)
+  2   0        0-30  0.557    56      3      4     5      True        substantive_anomaly  amp_deviation(outliers=3,max_dev=1.53); rhythm_irregularity(4_ibi_outliers); exploratory_clipping_minor(5_samples)
+  2   1       30-60  0.702    56      0      1     0      True mild_physiological_variation  mild_ibi_jitter(1_beat)
+  2   2       60-90  0.656    56      2      0     0      True        substantive_anomaly  amp_deviation(outliers=2,max_dev=0.50)
+  2   3      90-120  0.587    55      4      6    63      True        substantive_anomaly  amp_deviation(outliers=4,max_dev=1.72); rhythm_irregularity(6_ibi_outliers); exploratory_clipping_major(63_samples)
+  2   4     120-150  0.596    56      5      4    12      True        substantive_anomaly  amp_deviation(outliers=5,max_dev=1.24); rhythm_irregularity(4_ibi_outliers); exploratory_clipping_minor(12_samples)
+  2   5     150-180  0.608    59      4      0     0      True        substantive_anomaly  amp_deviation(outliers=4,max_dev=0.43)
+  2   6     180-210  0.584    58      7      3    18      True        substantive_anomaly  amp_deviation(outliers=7,max_dev=1.43); rhythm_irregularity(3_ibi_outliers); exploratory_clipping_minor(18_samples)
+  2   7     210-240  0.589    58      1      0     0      True mild_physiological_variation  mild_amp_variation(1_beats_likely_RIAM)
+  2   8     240-270  0.589    58      7      3    34      True        substantive_anomaly  amp_deviation(outliers=7,max_dev=1.06); rhythm_irregularity(3_ibi_outliers); exploratory_clipping_major(34_samples)
+  2   9     270-300  0.549    59      3      1     9      True        substantive_anomaly  amp_deviation(outliers=3,max_dev=1.07); mild_ibi_jitter(1_beat); exploratory_clipping_minor(9_samples)
+  2  10     300-330  0.569    58      2      0     0      True mild_physiological_variation  mild_amp_variation(2_beats_likely_RIAM)
+  2  11     330-360  0.570    58      3      0    14      True        substantive_anomaly  amp_deviation(outliers=3,max_dev=1.56); exploratory_clipping_minor(14_samples)
+  2  12     360-390  0.606    59      8      1     0      True        substantive_anomaly  amp_deviation(outliers=8,max_dev=1.47); mild_ibi_jitter(1_beat)
+
+[6. REKOMENDASI ATURAN KUALITAS PRAKTIS UNTUK DATASET UCI]
+Untuk tahap ekstraksi fitur berikutnya, disarankan menerapkan aturan kualitas bertingkat yang sederhana:
+1. Tingkat 1 (Hard Filter - Validitas Komputasi):
+   - Wajib NaN/Inf = 0, flatline = 0, dan jumlah puncak >= 15.
+   - Jendela yang gagal kriteria ini langsung dibuang karena tidak dapat diekstrak fiturnya.
+2. Tingkat 2 (Quality Filter - Ambang Toleransi Fisiologis):
+   - Skewness SQI: Pertahankan jendela dengan skewness positif (misal > 0.15).
+   - Toleransi Pencilan Amplitudo: Jangan gunakan n_outliers > 0! Gunakan rasio outlier <= 15% dari total denyut.
+   - Toleransi IBI: Izinkan fluktuasi denyut tunggal (HRV normal), tandai hanya jika rasio outlier IBI > 10%.
+   - Clipping ADC: Abaikan sentuhan minor (< 1% sampel), tandai hanya jika terjadi pemotongan gelombang persisten (> 5% sampel).
+3. Prinsip Pembelajaran Mesin (XGBoost):
+   Model berbasis pohon (XGBoost) sangat robust terhadap variasi fisiologis moderat, sehingga membuang
+   jendela hanya karena 1 denyut berbeda akan menghilangkan variasi data alami yang penting bagi generalisasi model.
+==============================================================================

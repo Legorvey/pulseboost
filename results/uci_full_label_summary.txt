@@ -1,0 +1,33 @@
+==========================================================================================
+LAPORAN RINGKASAN LABEL TARGET SBP DAN DBP DATASET UCI (TAHAP 8B)
+Proyek : Estimasi Tekanan Darah Cuffless & Saturasi Oksigen Menggunakan XGBoost
+Waktu  : 2026-11-02 08:01:43
+Lokasi : C:\Codes\UNIVERSITY PROJECTS (UNPAD)\Metode Penelitian KTI\KTI_XGBoost\results\uci_full_label_summary.txt
+==========================================================================================
+
+[1. VALIDITAS DAN KELENGKAPAN TARGET SBP & DBP]
+------------------------------------------------------------------------------------------
+  - Total Jendela                          : 83,423 jendela
+  - Jendela dengan Label Valid (SBP & DBP) : 83,353 jendela (99.92%)
+  - Jendela Tanpa Label Memadai (NaN)      : 70 jendela (0.08%)
+  - Verifikasi Fisiologis SBP > DBP        : 100% konsisten pada seluruh label valid
+
+[2. DISTRIBUSI STATISTIK SISTOLIK (SBP)]
+------------------------------------------------------------------------------------------
+  - Rentang (Min - Max)       : 68.63 - 198.11 mmHg
+  - Rata-rata +/- Std Deviasi : 129.85 +/- 22.10 mmHg
+  - Kuartil (Q1 - Med - Q3)   : 113.31 - 128.09 - 145.05 mmHg
+
+[3. DISTRIBUSI STATISTIK DIASTOLIK (DBP)]
+------------------------------------------------------------------------------------------
+  - Rentang (Min - Max)       : 50.00 - 129.39 mmHg
+  - Rata-rata +/- Std Deviasi : 66.77 +/- 10.92 mmHg
+  - Kuartil (Q1 - Med - Q3)   : 58.67 - 64.55 - 72.50 mmHg
+
+[4. SEBARAN KATEGORI TEKANAN DARAH (AHA GUIDELINE DESKRIPTIF)]
+------------------------------------------------------------------------------------------
+  - Normal (SBP < 120 & DBP < 80)          : 29,461 jendela (35.3%)
+  - Elevated (SBP 120-129 & DBP < 80)      : 13,230 jendela (15.9%)
+  - Stage 1 HTN (SBP 130-139 | DBP 80-89)  : 18,921 jendela (22.7%)
+  - Stage 2 HTN (SBP >= 140 | DBP >= 90)   : 27,111 jendela (32.5%)
+  - Catatan: Klasifikasi ini murni deskriptif statistik dan bukan diagnosis medis klinis.

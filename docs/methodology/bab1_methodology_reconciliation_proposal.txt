@@ -1,0 +1,147 @@
+================================================================================
+DRAF USULAN PENYELARASAN METODOLOGI BAB I (REVISI TERBATAS)
+Proyek: KTI_XGBoost - Estimasi Tekanan Darah Cuffless & Saturasi Oksigen
+Status: DRAF USULAN UNTUK DITINJAU DAN DISETUJUI PENGGUNA (BAB I ASLI TIDAK DIUBAH)
+Tanggal: 02 November 2026
+================================================================================
+
+PETUNJUK PENGGUNAAN DRAF:
+Dokumen ini disusun sebagai draf usulan perbaikan kalimat terbatas pada naskah
+Proposal / BAB I KTI agar selaras secara saintifik dengan implementasi kode aktual.
+Tujuan penelitian, dataset (UCI & OSASUD), algoritma XGBoost, serta 19 kandidat fitur
+PPG/APG tetap dipertahankan 100%. Naskah asli BAB I TIDAK diubah secara langsung.
+Setiap poin di bawah ini dapat diajukan kepada pembimbing atau ditinjau bersama ChatGPT.
+
+
+--------------------------------------------------------------------------------
+POIN 1: NORMALISASI SINYAL PPG (Z-SCORE vs PELESTARIAN SKALA AMPLITUDO SINYAL)
+--------------------------------------------------------------------------------
+1. Kutipan Kalimat Rancangan Awal / Asli:
+   "Sinyal PPG yang telah difilter kemudian dinormalisasi menggunakan metode z-score
+   untuk menyeragamkan rentang amplitudo sebelum dilakukan ekstraksi fitur."
+
+2. Mengapa Kalimat Itu Perlu Disesuaikan:
+   Pada implementasi pipeline aktual, normalisasi z-score pada sinyal kontinu 1D
+   per segmen/jendela TIDAK diterapkan. Jika z-score diterapkan pada sinyal mentah,
+   amplitudo sinyal akan dipaksa memiliki mean=0 dan std=1. Hal ini memusnahkan
+   variasi fisiologis magnitudo pulsa relatif ('pulse_amplitude' dan 'pulse_area')
+   yang mencerminkan kekuatan denyut vaskular dan elastisitas arteri antar-subjek.
+   Perlu ditekankan bahwa unit amplitudo PPG dari sensor fotodioda adalah unit ADC/arbitrer
+   (bukan pengukuran volume cairan atau tekanan terkalibrasi secara langsung), namun
+   variasi amplitudo relatif tersebut merupakan fitur penting bagi regresi XGBoost.
+   Selain itu, algoritma XGBoost berbasis pohon keputusan bersifat skala-invarian
+   terhadap fitur numerik individual, sehingga penyeragaman skala pada level sinyal tidak diperlukan.
+
+3. Usulan Kalimat Pengganti:
+   "Sinyal PPG hasil penapisan bandpass fase nol diproses langsung menuju tahap deteksi
+   titik fidusial dan ekstraksi fitur tanpa normalisasi z-score pada domain sinyal kontinu,
+   guna mempertahankan variasi amplitudo pulsa relatif (seperti pulse amplitude dan
+   pulse area) yang merefleksikan modulasi volume darah mikrovaskular perifer antar-rekaman.
+   Adapun algoritma pembelajaran mesin XGBoost berbasis histogram bersifat invarian
+   terhadap skala fitur individual, sehingga penyeragaman skala pada level deret waktu sinyal
+   tidak diperlukan dan dapat dihindari demi menjaga integritas informasi fisiologis."
+
+4. Dampak terhadap Metodologi:
+   Metodologi menjadi lebih kuat secara teoritis karena tidak memusnahkan informasi
+   amplitudo pulsa, serta menjelaskan secara logis mengapa standardisasi sinyal dihindari.
+
+
+--------------------------------------------------------------------------------
+POIN 2: PENILAIAN KUALITAS SINYAL (SKEWNESS SQI vs KELAYAKAN DENYUT FISIOLOGIS)
+--------------------------------------------------------------------------------
+1. Kutipan Kalimat Rancangan Awal / Asli:
+   "Kualitas sinyal PPG dinilai menggunakan Skewness Signal Quality Index (sSQI),
+   di mana segmen sinyal dengan nilai sSQI rendah atau negatif dibuang sebagai segmen
+   berkualitas buruk."
+
+2. Mengapa Kalimat Itu Perlu Disesuaikan:
+   Hasil audit empiris kualitas sinyal membuktikan bahwa sSQI (kemencengan momen ke-3
+   distribusi amplitudo jendela 30 detik) tidak dapat dijadikan ambang batas tunggal
+   untuk membuang jendela. Suatu rekaman dengan artefak lokal (seperti flatline parsial
+   atau denyut abnormal) masih dapat menghasilkan sSQI positif moderat (misal 0.52),
+   sedangkan sinyal fisiologis yang valid dengan sedikit fluktuasi dapat memiliki sSQI
+   mendekati nol. Oleh karena itu, penyaringan kualitas pada pipeline aktual menggunakan
+   aturan kelayakan fisiologis berbasis denyut (minimal 10 denyut valid per jendela 30 detik
+   pada rentang fisiologis 20-200 BPM serta ketersediaan label acuan yang valid).
+   Sementara itu, parameter 'skewness' tetap dihitung dan dimasukkan sebagai salah satu
+   dari 15 fitur prediktor numerik model.
+
+3. Usulan Kalimat Pengganti:
+   "Penilaian kelayakan kualitas sinyal PPG diterapkan melalui kriteria keteraturan denyut
+   fisiologis, di mana setiap jendela analisis 30 detik disyaratkan memiliki minimal 10 denyut
+   pulsasi yang terdeteksi secara valid (berada dalam rentang fisiologis denyut jantung 20 hingga
+   200 denyut per menit) serta memiliki nilai referensi target yang valid. Sementara itu,
+   parameter kemencengan distribusi amplitudo sinyal (skewness) dihitung dan diikutsertakan
+   sebagai salah satu fitur prediktor numerik morfologi dalam model regresi, alih-alih
+   dijadikan ambang batas tunggal untuk membuang segmen, guna menghindari bias pembuangan data
+   akibat keterbatasan sensitivitas metrik statistik global terhadap artefak lokal."
+
+4. Dampak terhadap Metodologi:
+   Prosedur pembersihan data menjadi transparan, objektif, dan dapat direproduksi
+   tanpa membuang segmen secara arbitrer.
+
+
+--------------------------------------------------------------------------------
+POIN 3: INDEKS KEKAKUAN ARTERI (STIFFNESS INDEX vs FITUR MORFOLOGI WAKTU & APG)
+--------------------------------------------------------------------------------
+1. Kutipan Kalimat Rancangan Awal / Asli:
+   "Fitur yang diekstraksi mencakup indeks kekakuan arteri (Arterial Stiffness Index)
+   untuk merefleksikan elastisitas dinding pembuluh darah subjek."
+
+2. Mengapa Kalimat Itu Perlu Disesuaikan:
+   Secara klinis, formula baku Arterial Stiffness Index adalah SI = h / Delta_T_DVP,
+   di mana h adalah tinggi badan subjek (dalam meter) dan Delta_T_DVP adalah selisih waktu
+   antara puncak sistolik dan gelombang pantul diastolik. Dataset sekunder publik UCI
+   dan OSASUD adalah dataset sinyal teranonimkan yang TIDAK menyertakan metadata antropometri
+   subjek (seperti tinggi badan per subjek). Tanpa variabel tinggi badan, indeks SI
+   tidak dapat dihitung secara valid. Sebagai solusinya, karakteristik dinamika gelombang nadi
+   diwakili oleh fitur waktu pulsa (rise time, decay time, pulse width 50%) serta empat rasio
+   turunan kedua APG (b/a, c/a, d/a, e/a). Namun, fitur-fitur ini harus dinyatakan secara jujur
+   sebagai representasi morfologi bentuk gelombang nadi perifer, bukan sebagai pengukuran
+   fisik langsung tonometri kekakuan dinding pembuluh darah.
+
+3. Usulan Kalimat Pengganti:
+   "Karakteristik propagasi dan pantulan gelombang nadi mikrovaskular perifer direpresentasikan
+   melalui kombinasi parameter waktu pulsa (seperti rise time, decay time, dan pulse width 50%)
+   serta empat rasio gelombang turunan kedua fotopletismogram (Acceleration Plethysmogram/APG,
+   yakni rasio b/a, c/a, d/a, dan e/a). Parameter indeks kekakuan arteri eksplisit
+   (Stiffness Index, SI = tinggi badan / Delta_T) tidak dihitung karena keterbatasan dataset
+   sekunder teranonimkan yang tidak menyediakan metadata tinggi badan subjek. Rasio APG
+   dan fitur waktu denyut tersebut digunakan sebagai indikator morfologis bentuk gelombang
+   nadi perifer, bukan sebagai pengukuran fisik langsung elastisitas atau kekakuan dinding arteri."
+
+4. Dampak terhadap Metodologi:
+   Mencegah klaim berlebihan (overclaiming) mengenai pengukuran kekakuan pembuluh darah,
+   serta menjelaskan secara elegan alasan ketiadaan fitur SI berdasarkan fakta dataset.
+
+
+--------------------------------------------------------------------------------
+POIN 4: SPESIFIKASI TEKNIS FILTER CHEBYSHEV TYPE II ORDE 4
+--------------------------------------------------------------------------------
+1. Kutipan Kalimat Rancangan Awal / Asli:
+   "Sinyal PPG difilter menggunakan bandpass filter Chebyshev Type II orde 4 dengan
+   frekuensi cut-off 0.5 hingga 8.0 Hz untuk menghilangkan derau interferensi dan baseline wander."
+
+2. Mengapa Kalimat Itu Perlu Disesuaikan:
+   Secara matematis pada pustaka scipy.signal.cheby2, parameter Wn = [0.5, 8.0] Hz adalah
+   frekuensi tepi STOPBAND (stopband edge) dengan redaman minimal rs = 20 dB, BUKAN frekuensi
+   batas -3 dB dari passband. Berdasarkan simulasi respon frekuensi aktual (sosfreqz),
+   batas passband riil (-3 dB) berada pada rentang [0.63 Hz, 6.45 Hz] dengan respon lolos
+   flat murni (gain 0.0 dB pada ~2.0 Hz) tanpa ripple pada pita lolos. Selain itu, filter
+   diimplementasikan secara zero-phase forward-backward (scipy.signal.sosfiltfilt) menggunakan
+   Second-Order Sections (SOS) untuk mencegah distorsi pergeseran fase pada puncak sistolik.
+
+3. Usulan Kalimat Pengganti:
+   "Penapisan derau sinyal PPG dilakukan menggunakan filter lolos-pita digital Chebyshev
+   Type II orde 4 fase nol (zero-phase forward-backward filtering via Second-Order Sections).
+   Filter dirancang dengan frekuensi tepi stopband Wn = [0.5, 8.0] Hz dan redaman stopband
+   rs = 20 dB, yang menghasilkan rentang passband efektif (-3 dB) pada interval frekuensi
+   sekitar 0.63 Hz hingga 6.45 Hz dengan penguatan flat murni tanpa riak (ripple-free)
+   pada daerah lolos. Konfigurasi ini secara efektif menekan pergeseran garis dasar (baseline wander)
+   akibat pernapasan di bawah 0.5 Hz serta derau frekuensi tinggi di atas 8.0 Hz, sembari
+   menjaga integritas temporal morfologi puncak sistolik denyut tanpa pergeseran waktu fase."
+
+4. Dampak terhadap Metodologi:
+   Memberikan landasan teori pengolahan sinyal digital (DSP) yang tepat dan akurat sesuai
+   rumusan matematis pustaka Python scipy, sehingga terhindar dari kekeliruan definisi istilah.
+================================================================================

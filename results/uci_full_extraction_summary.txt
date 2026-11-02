@@ -1,0 +1,55 @@
+==========================================================================================
+LAPORAN RINGKASAN EKSTRAKSI 19 FITUR DATASET UCI LENGKAP (TAHAP 8B)
+Proyek : Estimasi Tekanan Darah Cuffless & Saturasi Oksigen Menggunakan XGBoost
+Waktu  : 2026-11-02 08:01:43
+Lokasi : C:\Codes\UNIVERSITY PROJECTS (UNPAD)\Metode Penelitian KTI\KTI_XGBoost\results\uci_full_extraction_summary.txt
+==========================================================================================
+
+[1. RINGKASAN DATASET & REKAMAN]
+------------------------------------------------------------------------------------------
+  - Total File MAT Berhasil Dibaca     : 4 file (Part_1, Part_2, Part_3, Part_4)
+  - Total Rekaman Asli Ditemukan       : 12,000 rekaman (3.000 per Part)
+  - Rekaman Berhasil Diproses          : 9,624 rekaman (80.20%)
+  - Rekaman Gagal / Ditolak            : 2,376 rekaman (19.80%)
+  - Rekaman Duplikat Identik Persis    : 14 rekaman terdeteksi dan dicatat di log
+  - Total Jendela 30 Detik Terbentuk   : 83,423 jendela
+  - Waktu Eksekusi Total               : 472.73 detik (7.88 menit)
+  - Penggunaan Memori RAM Puncak       : 203.9 MB
+
+[2. KELENGKAPAN 19 KANDIDAT FITUR PPG DAN APG]
+------------------------------------------------------------------------------------------
+Nama Fitur                | Valid Jendela   | Kelengkapan (%)    | Missing (%)    
+------------------------------------------------------------------------------------------
+ibi_median_s              |        83,423 |           100.00% |          0.00%
+heart_rate_bpm            |        83,423 |           100.00% |          0.00%
+ibi_cv                    |        83,423 |           100.00% |          0.00%
+rise_time_s               |        83,423 |           100.00% |          0.00%
+decay_time_s              |        83,423 |           100.00% |          0.00%
+pulse_width_50_s          |        83,423 |           100.00% |          0.00%
+pulse_amplitude           |        83,423 |           100.00% |          0.00%
+pulse_area                |        83,423 |           100.00% |          0.00%
+max_ascending_slope       |        83,423 |           100.00% |          0.00%
+min_descending_slope      |        83,423 |           100.00% |          0.00%
+skewness                  |        83,423 |           100.00% |          0.00%
+kurtosis                  |        83,423 |           100.00% |          0.00%
+dominant_frequency_hz     |        83,423 |           100.00% |          0.00%
+spectral_power_ratio      |        83,423 |           100.00% |          0.00%
+spectral_entropy          |        83,423 |           100.00% |          0.00%
+apg_b_a                   |        83,423 |           100.00% |          0.00%
+apg_c_a                   |        80,587 |            96.60% |          3.40%
+apg_d_a                   |        77,082 |            92.40% |          7.60%
+apg_e_a                   |        77,082 |            92.40% |          7.60%
+------------------------------------------------------------------------------------------
+
+[3. STATUS QUALITY WARNING DAN DISTRIBUSI]
+------------------------------------------------------------------------------------------
+  - Jendela Tanpa Quality Warning (Bersih) : 61,579 jendela (73.82%)
+  - Jendela dengan Quality Warning         : 21,844 jendela (26.18%)
+  - Catatan: quality_warning disimpan sebagai metadata diagnostik, BUKAN sebagai prediktor.
+
+[4. KESIAPAN DATASET UNTUK TAHAP BERIKUTNYA]
+------------------------------------------------------------------------------------------
+  - CSV ini memuat record_id unik lintas file (Part_X:YYYYYY).
+  - Dataset SIAP untuk pembagian Train/Test berbasis rekaman (Record-Wise Split).
+  - Peringatan: Rekaman yang berstatus duplikat wajib dialokasikan ke fold yang sama
+    untuk mencegah kebocoran data (data leakage).

@@ -1,0 +1,51 @@
+{
+  "target": "dbp",
+  "target_name": "Diastolic Blood Pressure (DBP)",
+  "unit": "mmHg",
+  "config_tag": "config_c",
+  "config_label": "Config C (All 19 Features)",
+  "num_features": 19,
+  "features_list": [
+    "ibi_median_s",
+    "heart_rate_bpm",
+    "ibi_cv",
+    "rise_time_s",
+    "decay_time_s",
+    "pulse_width_50_s",
+    "pulse_amplitude",
+    "pulse_area",
+    "max_ascending_slope",
+    "min_descending_slope",
+    "skewness",
+    "kurtosis",
+    "dominant_frequency_hz",
+    "spectral_power_ratio",
+    "spectral_entropy",
+    "apg_b_a",
+    "apg_c_a",
+    "apg_d_a",
+    "apg_e_a"
+  ],
+  "parameters": {
+    "objective": "reg:squarederror",
+    "tree_method": "hist",
+    "n_estimators": 1000,
+    "learning_rate": 0.05,
+    "max_depth": 4,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "reg_lambda": 1.0,
+    "random_state": 42,
+    "early_stopping_rounds": 50,
+    "eval_metric": "mae",
+    "n_jobs": 4
+  },
+  "best_iteration": 996,
+  "validation_metrics": {
+    "mae": 6.566679996929406,
+    "rmse": 9.06702272341043,
+    "me": 0.4998637029034817,
+    "std_me": 9.053595449242746,
+    "r": 0.5101495589157268
+  }
+}

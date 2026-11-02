@@ -1,0 +1,74 @@
+=================================================================
+LAPORAN DETEKSI PUNCAK & LEMBAH PPG (UCI PART_1 REKAMAN 1)
+Segmen Waktu: 60.00 s.d. 70.00 detik (Durasi: 10.00 detik)
+Frekuensi Sampling (fs): 125 Hz | Total Sampel: 1250
+=================================================================
+
+[PARAMETER DETEKSI]
+- Filter: Chebyshev Type II Bandpass 0.5 - 8.0 Hz (Orde 4, Zero-Phase)
+- Min Distance Puncak: 0.35 detik (43 sampel)
+- Min Prominence     : 0.1557 (0.25 x Std Sinyal)
+
+[HASIL DETEKSI]
+- Jumlah Puncak Sistolik Terdeteksi: 20
+- Jumlah Lembah Diastolik Terdeteksi: 19
+
+[DAFTAR WAKTU PUNCAK]
+  Puncak  1: waktu = 60.528 s, amplitudo = 1.3124
+  Puncak  2: waktu = 61.024 s, amplitudo = 1.2979
+  Puncak  3: waktu = 61.528 s, amplitudo = 1.0722
+  Puncak  4: waktu = 62.016 s, amplitudo = 1.1478
+  Puncak  5: waktu = 62.520 s, amplitudo = 1.2243
+  Puncak  6: waktu = 63.016 s, amplitudo = 1.1506
+  Puncak  7: waktu = 63.520 s, amplitudo = 1.1471
+  Puncak  8: waktu = 64.008 s, amplitudo = 1.0950
+  Puncak  9: waktu = 64.504 s, amplitudo = 1.1820
+  Puncak 10: waktu = 65.008 s, amplitudo = 1.1841
+  Puncak 11: waktu = 65.512 s, amplitudo = 1.1765
+  Puncak 12: waktu = 66.008 s, amplitudo = 1.1726
+  Puncak 13: waktu = 66.496 s, amplitudo = 1.1246
+  Puncak 14: waktu = 66.992 s, amplitudo = 1.1302
+  Puncak 15: waktu = 67.488 s, amplitudo = 1.1004
+  Puncak 16: waktu = 67.984 s, amplitudo = 1.2675
+  Puncak 17: waktu = 68.472 s, amplitudo = 1.1927
+  Puncak 18: waktu = 68.960 s, amplitudo = 0.9865
+  Puncak 19: waktu = 69.456 s, amplitudo = 1.4487
+  Puncak 20: waktu = 69.936 s, amplitudo = 0.7065
+
+[INTERVAL ANTAR PUNCAK (IBI)]
+  IBI  1 (Puncak  1 ->  2): 0.496 s (496.0 ms) | HR instan: 121.0 BPM
+  IBI  2 (Puncak  2 ->  3): 0.504 s (504.0 ms) | HR instan: 119.0 BPM
+  IBI  3 (Puncak  3 ->  4): 0.488 s (488.0 ms) | HR instan: 123.0 BPM
+  IBI  4 (Puncak  4 ->  5): 0.504 s (504.0 ms) | HR instan: 119.0 BPM
+  IBI  5 (Puncak  5 ->  6): 0.496 s (496.0 ms) | HR instan: 121.0 BPM
+  IBI  6 (Puncak  6 ->  7): 0.504 s (504.0 ms) | HR instan: 119.0 BPM
+  IBI  7 (Puncak  7 ->  8): 0.488 s (488.0 ms) | HR instan: 123.0 BPM
+  IBI  8 (Puncak  8 ->  9): 0.496 s (496.0 ms) | HR instan: 121.0 BPM
+  IBI  9 (Puncak  9 -> 10): 0.504 s (504.0 ms) | HR instan: 119.0 BPM
+  IBI 10 (Puncak 10 -> 11): 0.504 s (504.0 ms) | HR instan: 119.0 BPM
+  IBI 11 (Puncak 11 -> 12): 0.496 s (496.0 ms) | HR instan: 121.0 BPM
+  IBI 12 (Puncak 12 -> 13): 0.488 s (488.0 ms) | HR instan: 123.0 BPM
+  IBI 13 (Puncak 13 -> 14): 0.496 s (496.0 ms) | HR instan: 121.0 BPM
+  IBI 14 (Puncak 14 -> 15): 0.496 s (496.0 ms) | HR instan: 121.0 BPM
+  IBI 15 (Puncak 15 -> 16): 0.496 s (496.0 ms) | HR instan: 121.0 BPM
+  IBI 16 (Puncak 16 -> 17): 0.488 s (488.0 ms) | HR instan: 123.0 BPM
+  IBI 17 (Puncak 17 -> 18): 0.488 s (488.0 ms) | HR instan: 123.0 BPM
+  IBI 18 (Puncak 18 -> 19): 0.496 s (496.0 ms) | HR instan: 121.0 BPM
+  IBI 19 (Puncak 19 -> 20): 0.480 s (480.0 ms) | HR instan: 125.0 BPM
+
+[STATISTIK HEART RATE]
+- Rata-rata IBI: 0.495 detik (495.2 ms)
+- Rata-rata Heart Rate : 121.20 BPM
+- Median Heart Rate    : 120.97 BPM
+- Min / Max Heart Rate : 119.05 / 125.00 BPM
+
+[RINGKASAN EVALUASI]
+1. Apakah jumlah puncak masuk akal?
+   Ya, sangat masuk akal. Terdeteksi 20 puncak dalam 10 detik, yang setara
+   dengan ritme jantung ~121.2 BPM. Ini sangat konsisten dengan ritme ECG dan ABP.
+2. Apakah posisi puncak cocok secara visual dengan denyut?
+   Ya, seluruh titik puncak jatuh tepat pada puncak tertinggi (fase sistolik) di setiap siklus denyut.
+3. Apakah ada deteksi yang tampak salah, ganda, atau terlewat?
+   Tidak ditemukan deteksi ganda (false positive) maupun denyut terlewat (false negative).
+   Semua interval IBI sangat stabil dan teratur (antara 480.0 ms hingga 504.0 ms).
+=================================================================

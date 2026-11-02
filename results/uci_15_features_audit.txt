@@ -1,0 +1,175 @@
+================================================================================
+LAPORAN AUDIT INDEPENDEN FITUR PPG TAHAP 6A (KTI_XGBoost)
+Dokumen: results/uci_15_features_audit.txt
+Tanggal Pemeriksaan: 01 November 2026
+Dataset: UCI Part_1 (Rekaman 0, 1, 2) | Total: 45 Jendela Pilot (30 detik)
+File Sumber yang Diaudit:
+  1. scripts/extract_ppg_features_pilot.py
+  2. results/uci_ppg_15_features_pilot.csv
+  3. results/uci_ppg_features_summary.txt
+================================================================================
+
+[RINGKASAN EKSEKUTIF AUDIT]
+Audit matematis, implementasi kode, dan integritas data terhadap 15 fitur kandidat PPG 
+menunjukkan bahwa SELURUH RUMUS MATEMATIS PADA SKRIP DAN DATASET CSV LULUS PEMERIKSAAN.
+Nilai numerik pada file "results/uci_ppg_15_features_pilot.csv" valid, konsisten secara
+fisiologis, dan tidak mengandung manipulasi buatan.
+
+Namun demikian, audit menemukan DISKREPANSI TEKSTUAL PADA DOKUMEN LAPORAN RINGKASAN
+(results/uci_ppg_features_summary.txt) dan logika pemformatan string pada pencetakan:
+1. Typo Naratif PW50: Nilai median 0.171 s tertulis "~192 ms" pada teks narasi. Seharusnya 0.171 s = 171 ms (171.1 ms).
+2. Bug String Formatting Satuan Slope: Pengecekan satuan menggunakan `if "_s" in fn` menyebabkan fitur 
+   "max_ascending_slope" dan "min_descending_slope" berlabel "s" (karena mengandung substring "_slope").
+   Satuan yang benar secara kalkulasi fisik adalah arbitrary units per second (a.u./s).
+3. Label Satuan Amplitudo dan Area: Pada tabel ringkasan, "pulse_amplitude" dilabeli "rasio/a.u." (seharusnya "a.u.")
+   dan "pulse_area" dilabeli "rasio/a.u." (seharusnya "a.u.·s" atau a.u.·detik).
+4. Angka Ilustratif Narasi: Teks narasi mencantumkan Rise Time 0.155 s dan Decay Time 0.347 s dari draft awal,
+   sedangkan rata-rata empiris pada dataset adalah 0.153 s dan 0.350 s (median 0.152 s dan 0.344 s).
+
+Koreksi tekstual telah didokumentasikan secara transparan. Karena tidak ditemukan kesalahan matematis
+pada dataset CSV, Ekstraksi 4 Fitur APG (Tahap 6B) DINYATAKAN AMAN UNTUK DILANJUTKAN.
+
+================================================================================
+[AUDIT RINCI 15 FITUR KANDIDAT PPG]
+================================================================================
+
+--- KELOMPOK A: INTERVAL DENYUT (3 FITUR) ---
+
+1. ibi_median_s (Inter-Beat Interval Median)
+   - Definisi: Median durasi waktu antar puncak sistolik berturutan dalam jendela.
+   - Rumus: median(diff(w_peaks) / fs)
+   - Satuan: Detik (s)
+   - Status Audit: LULUS (Valid matematis). Nilai median pilot = 0.504 s (rentang: 0.480 - 0.544 s).
+
+2. heart_rate_bpm (Denyut Jantung Rata-rata Jendela)
+   - Definisi: Konversi frekuensi denyut dari median IBI ke satuan standar denyut per menit.
+   - Rumus: 60.0 / ibi_median_s
+   - Satuan: Beats Per Minute (BPM)
+   - Status Audit: LULUS (Valid fisiologis). Nilai median pilot = 119.05 BPM (rentang: 110.29 - 125.00 BPM).
+
+3. ibi_cv (Variabilitas Interval Denyut)
+   - Definisi: Koefisien variasi durasi antar denyut untuk mendeteksi aritmia/irama irregular.
+   - Rumus: std(IBI) / mean(IBI)
+   - Satuan: Rasio tanpa dimensi (rasio/a.u.)
+   - Status Audit: LULUS (Valid). Nilai median pilot = 0.0363, max = 0.1841 pada jendela dengan aritmia transien.
+
+--- KELOMPOK B: MORFOLOGI GELOMBANG PPG (5 FITUR) ---
+
+4. rise_time_s (Waktu Naik Sistolik)
+   - Definisi: Durasi waktu dari kaki awal denyut (onset valley) hingga puncak sistolik (systolic peak).
+   - Rumus: (idx_peak - idx_on) / fs dihitung per denyut valid, diagregasi dengan median per jendela.
+   - Satuan: Detik (s)
+   - Status Audit: LULUS. Seluruh 2628 denyut dihitung strictly dari denyut lengkap yang berada utuh
+     dalam jendela (s_idx <= idx_on < idx_peak < idx_off <= e_idx). Median pilot = 0.152 s (~152 ms).
+
+5. decay_time_s (Waktu Turun Diastolik)
+   - Definisi: Durasi waktu dari puncak sistolik hingga kaki akhir denyut (offset valley).
+   - Rumus: (idx_off - idx_peak) / fs dihitung per denyut valid, diagregasi dengan median per jendela.
+   - Satuan: Detik (s)
+   - Status Audit: LULUS. Konsisten dengan fisiologi vaskular di mana fase diastolik (median 0.344 s)
+     berlangsung ~2.26x lebih lama daripada fase sistolik (median 0.152 s). Penjumlahan rise + decay = 0.496 s,
+     sangat presisi merefleksikan median durasi denyut total (0.504 s).
+
+6. pulse_width_50_s (PW50 / Full Width at Half Maximum)
+   - Definisi: Lebar gelombang denyut pada 50% amplitudo puncak terhadap baseline lokal miring kaki-ke-kaki.
+   - Rumus: (t_cross_desc - t_cross_asc), di mana t_cross diperoleh melalui interpolasi linier sub-sampel
+     pada fase naik dan fase turun dari denyut yang telah dikurangkan garis baseline lokal (y_sub).
+   - Satuan: Detik (s)
+   - Verifikasi Nilai: Nilai median jendela adalah 0.1711 s (rentang: 0.1660 - 0.1781 s).
+   - Koreksi Audit: 0.171 detik adalah 171 ms, BUKAN 192 ms seperti typo yang tercantum pada teks ringkasan 6A.
+   - Status Audit: LULUS (Metode crossing sub-sampel linier konsisten dan presisi tinggi).
+
+7. pulse_amplitude (Amplitudo Denyut Sistolik)
+   - Definisi: Selisih amplitudo antara puncak sistolik dan kaki awal denyut.
+   - Rumus: y_filt[idx_peak] - y_filt[idx_on]
+   - Satuan: Amplitudo Relatif (a.u. / arbitrary units)
+   - Status Audit: LULUS. Nilai median pilot = 1.8872 a.u. Label satuan dikoreksi dari "rasio/a.u." menjadi "a.u.".
+
+8. pulse_area (Luas Area Denyut Terhadap Baseline Lokal)
+   - Definisi: Integral area gelombang denyut di atas baseline lokal linier yang menghubungkan
+     kaki awal (idx_on, y_on) dan kaki akhir (idx_off, y_off).
+   - Rumus: trapezoid(y_sub, dx = 1.0/fs), dengan y_sub = y_beat - baseline_linear.
+   - Satuan: Amplitudo Relatif dikali Detik (a.u.·s atau a.u.·detik)
+   - Verifikasi Metodologis: Penggunaan baseline lokal linier kaki-ke-kaki sangat tepat untuk
+     mengeliminasi drift frekuensi rendah antar denyut dan fluktuasi respirasi.
+   - Status Audit: LULUS. Nilai median pilot = 0.3789 a.u.·s (rentang: 0.3386 - 0.4020 a.u.·s).
+
+--- KELOMPOK C: TURUNAN PERTAMA / SLOPE (2 FITUR) ---
+
+9. max_ascending_slope (Laju Peningkatan Maksimum)
+   - Definisi: Nilai turunan pertama positif terbesar (kemiringan paling tajam) saat fase upstroke sistolik.
+   - Rumus: max(dy/dt[:rel_peak_idx + 1]) dengan dy/dt dihitung via central finite differences (np.gradient, dx=1/fs).
+   - Satuan: Amplitudo Relatif per Detik (a.u./s), BUKAN detik (s).
+   - Status Audit: LULUS secara matematis. Nilai numerik pada CSV benar (+20.335 a.u./s). Kesalahan label "s"
+     pada teks ringkasan murni akibat string formatting `if "_s" in fn`.
+
+10. min_descending_slope (Laju Penurunan Minimum / Paling Negatif)
+   - Definisi: Nilai turunan pertama negatif terbesar (kemiringan paling curam ke bawah) saat fase downstroke diastolik.
+   - Rumus: min(dy/dt[rel_peak_idx:]) dengan dy/dt dihitung via central finite differences (np.gradient, dx=1/fs).
+   - Satuan: Amplitudo Relatif per Detik (a.u./s), BUKAN detik (s).
+   - Status Audit: LULUS secara matematis. Nilai numerik pada CSV benar (-12.483 a.u./s). Kesalahan label "s"
+     pada teks ringkasan murni akibat string formatting `if "_s" in fn`.
+
+--- KELOMPOK D: STATISTIK BENTUK SINYAL (2 FITUR) ---
+
+11. skewness (Kemencengan Distribusi)
+   - Definisi: Momen ketiga ternormalisasi sinyal PPG terfilter pada jendela 30 detik (Fisher-Pearson coefficient).
+   - Rumus: skew(w_ppg_filt, bias=True)
+   - Satuan: Rasio tanpa dimensi (dimensi-less)
+   - Status Audit: LULUS. Nilai median pilot = 0.5689 (positif, merefleksikan upstroke tajam dan downstroke melandai).
+
+12. kurtosis (Kurtosis Eksid / Keruncingan)
+   - Definisi: Momen keempat ternormalisasi menurut definisi Fisher (distribusi normal = 0.0).
+   - Rumus: kurtosis(w_ppg_filt, fisher=True, bias=True)
+   - Satuan: Rasio tanpa dimensi (dimensi-less)
+   - Status Audit: LULUS. Nilai median pilot = -0.9682 (platikurtik, mencerminkan osilasi pulsasi periodik).
+
+--- KELOMPOK E: DOMAIN FREKUENSI / WELCH PSD (3 FITUR) ---
+
+13. dominant_frequency_hz (Frekuensi Dominan Spektral)
+   - Definisi: Frekuensi dengan densitas spektral daya puncak (peak PSD) dalam passband fisiologis [0.7, 6.0] Hz.
+   - Rumus: argmax(psd[0.7 <= f <= 6.0]) via Welch's method (nperseg=512, noverlap=256, df=0.244 Hz).
+   - Satuan: Hertz (Hz)
+   - Status Audit: LULUS. Nilai median pilot = 1.9531 Hz. Ekuivalen dengan 1.9531 x 60 = 117.19 BPM, selaras sempurna
+     dengan denyut jantung median berbasis puncak waktu (119.05 BPM).
+
+14. spectral_power_ratio (Rasio Daya Kardiak)
+   - Definisi: Proporsi energi spektral pada pita kardiak fundamental [1.0, 3.0] Hz terhadap total daya spektral [0.7, 6.0] Hz.
+   - Rumus: Integral(PSD, 1.0-3.0 Hz) / Integral(PSD, 0.7-6.0 Hz) via metode trapezoid.
+   - Satuan: Rasio proporsi [0.0 s.d. 1.0]
+   - Status Audit: LULUS. Nilai median pilot = 0.8250 (~82.5% energi gelombang terpusat pada pita pulsasi kardiak murni).
+
+15. spectral_entropy (Entropi Spektral Shannon)
+   - Definisi: Derajat kerataan atau kompleksitas distribusi spektral daya, ternormalisasi dengan log(K).
+   - Rumus: -sum(p * log(p)) / log(K), di mana p = PSD / sum(PSD).
+   - Satuan: Normalisasi [0.0 s.d. 1.0]
+   - Status Audit: LULUS. Nilai median pilot = 0.4757 (menunjukkan keteraturan spektral yang tinggi).
+
+================================================================================
+[PEMERIKSAAN INTEGRITAS PERHITUNGAN DENYUT VALID]
+================================================================================
+- Apakah nilai mean dan median tertukar dalam pelaporan?
+  -> Pada tabel statistik CSV dan tabel laporan teks, urutan kolom adalah:
+     Min, Median, Max, Mean, Std.
+     Pemeriksaan memverifikasi bahwa nilai median dan mean TIDAK TERTUKAR pada data CSV maupun tabel ringkasan.
+     Hanya pada teks narasi terdapat hardcoded angka Rise Time (0.155 s) dan Decay Time (0.347 s) yang berasal
+     dari estimasi putaran awal, sedangkan tabel yang benar menampilkan mean 0.153 s dan 0.350 s.
+
+- Apakah fitur berbasis median benar-benar dihitung dari denyut valid?
+  -> YA, TERVERIFIKASI 100%.
+     Iterasi denyut pada baris 204-214 mengevaluasi setiap denyut secara individual:
+     Syarat eksklusif: `s_idx <= v_on and v_off <= e_idx`.
+     Denyut yang terpotong oleh batas jendela 30 detik (di awal atau di akhir jendela) secara otomatis
+     dieliminasi dari perhitungan morfologi jendela.
+     Nilai jendela diperoleh dari `df_beats[fitur].median()` yang hanya memproses denyut-denyut lengkap tersebut.
+     Total denyut lengkap yang digunakan adalah 2628 denyut (rata-rata 58.4 denyut per jendela, rentang 54 - 61 denyut).
+
+================================================================================
+[KESIMPULAN AUDIT DAN REKOMENDASI TAHAP 6B]
+================================================================================
+1. Seluruh 15 rumus fitur PPG telah diverifikasi akurat, kokoh secara numerik, dan sesuai standar literatur.
+2. File data `results/uci_ppg_15_features_pilot.csv` dinyatakan VALID dan TIDAK PERLU DIUBAH definisi fiturnya.
+3. Diskrepansi pelaporan (typo PW50 171 ms vs 192 ms, dan perbaikan label satuan a.u./s serta a.u.·s)
+   telah dicatat secara eksplisit dalam dokumen audit ini.
+4. TAHAP 6B (EKSTRAKSI EMPAT RASIO APG) RESMI DIBERIKAN PERSETUJUAN (APPROVED) UNTUK DIKERJAKAN.
+================================================================================

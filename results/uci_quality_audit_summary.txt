@@ -1,0 +1,58 @@
+===========================================================================
+LAPORAN AUDIT KUALITAS SINYAL PPG SEBELUM EKSTRAKSI FITUR (TAHAP 5B)
+Berkas: Part_1.mat | Rekaman: Indeks 0, 1, 2 | Total: 45 Jendela (30 detik)
+===========================================================================
+
+[1. REKAPITULASI LABEL SEMENTARA AUDIT]
+- Total Jendela yang Diaudit  : 45 jendela
+- Label 'review_needed'      : 41 jendela (91.1%)
+- Label 'no_obvious_issue'   : 4 jendela (8.9%)
+  (Catatan: Label 'review_needed' murni sebagai indikator pemeriksaan, BUKAN bukti pembuangan data)
+
+[2. ANALISIS MENDALAM 3 LOKASI SPESIFIK]
+A. Rekaman 0: Jendela 2 (Detik 60 - 90, terutama detik 79 - 86):
+   - Temuan PPG: Terjadi lonjakan puncak pada detik 82.5 (1.90 a.u.), diikuti penurunan drastis
+     amplitudo puncak pada detik 83.5 - 85.0 menjadi 0.61 - 0.73 a.u. (normal ~1.15 a.u.).
+     Ditemukan 6 outlier amplitudo denyut relatif terhadap median jendela.
+   - Korelasi ABP: Tekanan ABP tetap stabil (sistolik ~124-128 mmHg, ritme teratur).
+   - Interpretasi: Gangguan lokal pada PPG (artefak pergerakan sensor / perubahan vasomotor lokal),
+     bukan berasal dari kegagalan sirkulasi hemodinamik sistemik.
+
+B. Rekaman 1: Jendela 0 (Detik 0 - 30, terutama detik 15 - 18 dan 27 - 29):
+   - Temuan PPG: Terjadi dua denyut prematur di t=16.58s (IBI=368 ms, amp=0.69) dan t=28.68s
+     (IBI=376 ms, amp=0.65), masing-masing diikuti fase jeda kompensasi panjang.
+   - Korelasi ABP: Sinyal ABP juga memperlihatkan jeda panjang (IBI ABP melonjak ke 816 ms dan 824 ms)
+     akibat pengisian ventrikel yang belum optimal pada denyut prematur.
+   - Interpretasi: Fenomena fisiologis nyata (aritmia / denyut prematur ventrikel/atrium), BUKAN artefak sensor.
+
+C. Rekaman 2: Jendela 1 (Detik 30 - 60, terutama detik 54 - 58):
+   - Temuan PPG: Interval IBI memendek ke 400 ms (t=56.36s), disusul interval kompensasi 544 ms.
+   - Korelasi ABP: Perubahan ritme sinkron terlihat pada ABP.
+   - Interpretasi: Variasi fisiologis denyut jantung (arrhythmia / respiratory sinus arrhythmia ringan).
+
+[3. MENGAPA SKEWNESS SQI TUNGGAL TIDAK CUKUP?]
+1. Skewness SQI adalah momen statistik global ke-3 yang dirata-ratakan selama 30 detik.
+   Pada Rekaman 0 Jendela 2, sSQI tercatat 0.524 (positif dan tampak 'ideal'), meskipun
+   terdapat anomali amplitudo denyut yang anjlok 50% selama 6 detik berturut-turut.
+2. Skewness tidak sensitif terhadap:
+   - Gangguan amplitudo transien jangka pendek (beberapa siklus).
+   - Denyut prematur atau jeda kompensasi ektopik.
+   - Sampel clipping di rel batas sensor jika durasinya singkat.
+
+[4. INDIKATOR DIAGNOSTIK TAMBAHAN YANG MEMBANTU]
+1. Pulse Amplitude MAD (Median Absolute Deviation):
+   Sangat efektif mengidentifikasi variasi tak wajar tinggi gelombang antar-denyut.
+2. IBI MAD / IBI Outlier Detection:
+   Mendeteksi ketidakteraturan ritme, denyut ektopik, atau denyut yang terlewat/ganda.
+3. Clipping Sample Count:
+   Mendeteksi saturasi voltase ADC sensor optik (<=0.01V atau >=3.99V).
+
+[5. USULAN KRITERIA KUALITAS MULTI-DIMENSI (UNTUK TAHAP BERIKUTNYA)]
+(Catatan: Kriteria ini merupakan usulan eksploratif, BELUM diterapkan sebagai pemotong data final):
+1. Dimensi Morfologi Global: sSQI positif moderat (misal 0.20 s.d. 0.85).
+2. Dimensi Stabilitas Ritme : Rasio outlier IBI < 10% per jendela 30s.
+3. Dimensi Stabilitas Amplitudo: Rasio outlier amplitudo denyut < 15% per jendela 30s.
+4. Dimensi Integritas Sensor: Sampel clipping rail ADC < 1% dari total sampel jendela.
+5. Kebijakan Aritmia: Denyut ektopik fisiologis (yang terkonfirmasi sinkron di ABP) dapat dipertahankan
+   atau dipotong per siklus, sedangkan artefak sensor terisolasi sebaiknya dieksklusi.
+===========================================================================

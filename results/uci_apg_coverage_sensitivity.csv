@@ -1,0 +1,5 @@
+criterion,min_beat_pct,min_beat_cnt,apg_b_a_valid_windows,apg_b_a_coverage_pct,apg_b_a_rec0,apg_b_a_rec1,apg_b_a_rec2,apg_c_a_valid_windows,apg_c_a_coverage_pct,apg_c_a_rec0,apg_c_a_rec1,apg_c_a_rec2,apg_d_a_valid_windows,apg_d_a_coverage_pct,apg_d_a_rec0,apg_d_a_rec1,apg_d_a_rec2,apg_e_a_valid_windows,apg_e_a_coverage_pct,apg_e_a_rec0,apg_e_a_rec1,apg_e_a_rec2
+Baseline (>= 1 denyut),0.001,1,45,100.0,16/16,16/16,13/13,45,100.0,16/16,16/16,13/13,42,93.33,13/16,16/16,13/13,42,93.33,13/16,16/16,13/13
+Kriteria 1 (>= 10% denyut),10.0,0,45,100.0,16/16,16/16,13/13,45,100.0,16/16,16/16,13/13,19,42.22,1/16,6/16,12/13,19,42.22,1/16,6/16,12/13
+Kriteria 2 (>= 20% & >= 10 denyut),20.0,10,45,100.0,16/16,16/16,13/13,45,100.0,16/16,16/16,13/13,13,28.89,0/16,2/16,11/13,13,28.89,0/16,2/16,11/13
+Kriteria 3 (>= 30% denyut),30.0,0,45,100.0,16/16,16/16,13/13,45,100.0,16/16,16/16,13/13,10,22.22,0/16,0/16,10/13,10,22.22,0/16,0/16,10/13

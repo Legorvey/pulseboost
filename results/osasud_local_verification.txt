@@ -1,0 +1,103 @@
+==========================================================================================
+LAPORAN LOKAL VERIFIKASI EKSTRAKSI HASIL KONVERSI DATASET OSASUD (TAHAP 7D)
+Proyek  : Estimasi Tekanan Darah Cuffless & Saturasi Oksigen (SpO2) Menggunakan XGBoost
+Waktu   : 2026-11-02 06:57:51
+Lokasi  : C:\Codes\UNIVERSITY PROJECTS (UNPAD)\Metode Penelitian KTI\KTI_XGBoost\results\osasud_local_verification.txt
+==========================================================================================
+
+[1. RINGKASAN EKSEKUTIF]
+  - Status Integritas Berkas  : 100% VALID (Lolos uji CRC testzip & allow_pickle=False)
+  - Jumlah Pasien Berhasil    : 30 pasien (NPZ terpisah)
+  - Total Baris / Detik Data  : 961,357 detik (~267.04 jam rekaman)
+  - Target Baris Kaggle       : 961,357 detik
+  - Kesesuaian Total Baris    : COCOK PERSIS (Selisih = 0)
+  - Total Ukuran Berkas NPZ   : 44.54 MB (Rata-rata 1.48 MB/pasien)
+  - Keamanan Path Traversal   : LOLOS (Semua anggota ZIP diekstrak ke direktori terisolasi)
+  - Pembacaan Pickle Asli     : TIDAK DILAKUKAN (File asli dataset_OSAS.pickle utuh)
+
+[2. INTEGRITAS SINYAL PPG (80 Hz)]
+  - Bentuk Array Per Pasien   : (N, 80) float64 presisi ganda murni
+  - Total Sampel Titik PPG    : 76,908,560 titik
+  - Total Nilai NaN pada PPG  : 10,424,720 titik (13.55%)
+  - Total Nilai Inf pada PPG  : 0 (Nihil)
+  - Evaluasi Sinyal Konstan   : NIHIL (Seluruh 30 pasien memiliki variasi sinyal berfluktuasi wajar)
+  - Keragaman Nilai Sampel    : > 1,000 nilai unik per segmen pendek sampel
+  - Catatan Ukuran Ringkas    : Kompresi NPZ (deflate) bekerja sangat efisien pada sinyal PPG
+                                karena korelasi temporal dan pola bit floating-point berulang,
+                                tanpa terjadi pemotongan presisi ataupun downsampling.
+
+[3. ANALISIS KELENGKAPAN TARGET SpO2 (1 Hz)]
+  - Total Baris SpO2 Valid    : 828,777 baris (86.21%)
+  - Total Nilai SpO2 Kosong   : 132,580 baris (13.79%)
+  - Rentang Nilai SpO2 Valid  : 60.0% s.d. 100.0% (Secara klinis realistis untuk pasien sleep apnea)
+  - Tindakan Rekayasa Data    : TIDAK ADA IMPUTASI ATAU PENGHAPUSAN (Label dipertahankan apa adanya)
+
+  Daftar 10 Pasien dengan Proporsi SpO2 Kosong Tertinggi:
+  Pasien ID    Total Baris  SpO2 Kosong     Persentase (%)   Rentang Valid (%)   
+  ---------------------------------------------------------------------------
+  28           26,762       19,465          72.73            [89.0 - 100.0]      
+  17           28,987       19,053          65.73            [88.0 - 100.0]      
+  18           35,875       13,385          37.31            [84.0 - 100.0]      
+  22           28,952       6,490           22.42            [77.0 - 100.0]      
+  11           30,400       6,715           22.09            [61.0 - 100.0]      
+  15           33,105       6,308           19.05            [90.0 - 100.0]      
+  25           38,018       6,978           18.35            [79.0 - 100.0]      
+  10           41,058       7,303           17.79            [63.0 - 100.0]      
+  19           34,151       5,750           16.84            [91.0 - 100.0]      
+  27           27,512       4,158           15.11            [69.0 - 100.0]      
+
+[4. ANALISIS KONTINUITAS & INTEGRITAS TIMESTAMP]
+  - Format Timestamp          : ISO 8601 string (<U32) dan Unix nanoseconds (int64)
+  - Keterurutan Monotonik     : 100% TERURUT SECARA KRONOLOGIS
+  - Duplikasi Timestamp       : NIHIL (0 baris duplikat)
+  - Langkah Negatif (Mundur)  : NIHIL (0 baris mundur)
+  - Konsistensi Interval 1s   : Rata-rata > 99.8% berjarak tepat 1 detik per detik rekaman
+  - Jeda Waktu (Time Gaps)    : Terdapat jeda antar-sesi rekaman pada sebagian pasien (dicatat wajar,
+                                tanpa asumsi buatan bahwa seluruh waktu kontinu sempurna).
+
+[5. METADATA PERFUSION INDEX (PI)]
+  - Status Penggunaan         : HANYA METADATA PENDUKUNG (Bukan fitur input model XGBoost)
+  - Rata-rata PI NaN          : 13.86%
+
+[6. TABEL LENGKAP 30 PASIEN TERVERIFIKASI]
+  No   ID     File NPZ             Baris    Jam    PPG [Min, Max]         SpO2 NaN%  1s Pct   Gaps  
+  ------------------------------------------------------------------------------------------
+  1    1      patient_1.npz        25,178   6.99   [0.0, 195.0]           8.3        100.0    0     
+  2    2      patient_2.npz        42,877   11.91  [0.0, 195.0]           6.1        100.0    0     
+  3    3      patient_3.npz        25,682   7.13   [0.0, 195.0]           0.2        100.0    0     
+  4    4      patient_4.npz        32,477   9.02   [0.0, 195.0]           0.2        100.0    0     
+  5    5      patient_5.npz        32,741   9.09   [0.0, 195.0]           3.6        100.0    0     
+  6    6      patient_6.npz        14,610   4.06   [0.0, 195.0]           1.6        100.0    0     
+  7    7      patient_7.npz        33,148   9.21   [0.0, 195.0]           11.1       100.0    0     
+  8    8      patient_8.npz        32,397   9.00   [0.0, 195.0]           12.1       100.0    0     
+  9    9      patient_9.npz        34,156   9.49   [0.0, 195.0]           13.4       100.0    0     
+  10   10     patient_10.npz       41,058   11.40  [0.0, 195.0]           17.8       100.0    0     
+  11   11     patient_11.npz       30,400   8.44   [0.0, 195.0]           22.1       100.0    0     
+  12   12     patient_12.npz       30,146   8.37   [0.0, 195.0]           0.0        100.0    0     
+  13   13     patient_13.npz       34,036   9.45   [0.0, 195.0]           1.9        100.0    0     
+  14   14     patient_14.npz       36,920   10.26  [0.0, 195.0]           2.6        100.0    0     
+  15   15     patient_15.npz       33,105   9.20   [0.0, 195.0]           19.1       100.0    0     
+  16   16     patient_16.npz       32,360   8.99   [0.0, 195.0]           11.9       100.0    0     
+  17   17     patient_17.npz       28,987   8.05   [0.0, 195.0]           65.7       100.0    0     
+  18   18     patient_18.npz       35,875   9.97   [0.0, 195.0]           37.3       100.0    0     
+  19   19     patient_19.npz       34,151   9.49   [0.0, 195.0]           16.8       100.0    0     
+  20   20     patient_20.npz       35,233   9.79   [0.0, 195.0]           3.9        100.0    0     
+  21   21     patient_21.npz       35,150   9.76   [0.0, 195.0]           0.1        100.0    0     
+  22   22     patient_22.npz       28,952   8.04   [0.0, 195.0]           22.4       100.0    0     
+  23   23     patient_23.npz       34,086   9.47   [0.0, 195.0]           0.8        100.0    0     
+  24   24     patient_24.npz       35,432   9.84   [0.0, 195.0]           12.2       100.0    0     
+  25   25     patient_25.npz       38,018   10.56  [0.0, 195.0]           18.4       100.0    0     
+  26   26     patient_26.npz       32,393   9.00   [0.0, 195.0]           12.7       100.0    0     
+  27   27     patient_27.npz       27,512   7.64   [0.0, 195.0]           15.1       100.0    0     
+  28   28     patient_28.npz       26,762   7.43   [0.0, 195.0]           72.7       100.0    0     
+  29   29     patient_29.npz       28,138   7.82   [0.0, 195.0]           9.9        100.0    0     
+  30   30     patient_30.npz       29,377   8.16   [0.0, 195.0]           0.5        100.0    0     
+
+==========================================================================================
+[7. KESIMPULAN & KESIAPAN TAHAP SELANJUTNYA]
+1. Seluruh 30 berkas NPZ OSASUD telah diekstrak dan diverifikasi di komputer lokal.
+2. Total 961,357 baris cocok 100% dengan hasil konversi Kaggle tanpa kehilangan satu baris pun.
+3. Setiap pasien dapat dimuat mandiri dengan memori RAM < 50 MB, sehingga tahapan
+   segmentasi jendela 30 detik dan ekstraksi fitur APG dapat dilakukan secara aman
+   pada komputer Windows tanpa risiko lonjakan RAM ataupun ketergantungan cloud.
+==========================================================================================

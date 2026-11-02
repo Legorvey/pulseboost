@@ -1,0 +1,74 @@
+================================================================================
+RINGKASAN CORRELATION-BASED FEATURE SELECTION (CFS) - TAHAP 9B
+Diadaptasi dari formulasi Hall (1999) dan inspirasi Nishan dkk. (2024)
+Dihitung HANYA pada set TRAIN (Data VALIDATION & TEST tidak pernah dilibatkan)
+================================================================================
+
+FORMULA MERIT SUBSET CFS:
+  M_S = (k * mean(|r_cf|)) / sqrt(k + k*(k-1)*mean(|r_ff|))
+Di mana:
+  - k = jumlah fitur dalam subset kandidat.
+  - mean(|r_cf|) = rata-rata korelasi Pearson absolut antara fitur kandidat dan target.
+  - mean(|r_ff|) = rata-rata korelasi Pearson absolut antarfitur dalam subset.
+  - Kriteria berhenti: Forward selection greedy berhenti saat merit tidak meningkat.
+
+TARGET: SBP (sbp_mmhg) [mmHg]
+  Jumlah Fitur Terpilih: 4
+  Skor Merit Maksimum  : 0.2800
+  Urutan Forward Selection:
+    Langkah 1: + apg_c_a                (Merit = 0.1894, |r_cf| = 0.1894)
+    Langkah 2: + apg_b_a                (Merit = 0.2400, |r_cf| = 0.1520)
+    Langkah 3: + decay_time_s           (Merit = 0.2617, |r_cf| = 0.1821)
+    Langkah 4: + max_ascending_slope    (Merit = 0.2800, |r_cf| = 0.1200)
+  Daftar Korelasi Relevansi Fitur (|r_cf|) terhadap Target (Ranking Top 10):
+     1. apg_c_a                : 0.1894
+     2. decay_time_s           : 0.1821
+     3. pulse_area             : 0.1683
+     4. apg_b_a                : 0.1520
+     5. heart_rate_bpm         : 0.1285
+     6. ibi_median_s           : 0.1242
+     7. max_ascending_slope    : 0.1200
+     8. rise_time_s            : 0.1197
+     9. pulse_amplitude        : 0.1187
+    10. dominant_frequency_hz  : 0.1183
+--------------------------------------------------------------------------------
+TARGET: DBP (dbp_mmhg) [mmHg]
+  Jumlah Fitur Terpilih: 6
+  Skor Merit Maksimum  : 0.2017
+  Urutan Forward Selection:
+    Langkah 1: + ibi_median_s           (Merit = 0.1573, |r_cf| = 0.1573)
+    Langkah 2: + skewness               (Merit = 0.1801, |r_cf| = 0.1146)
+    Langkah 3: + apg_d_a                (Merit = 0.1893, |r_cf| = 0.1031)
+    Langkah 4: + rise_time_s            (Merit = 0.1966, |r_cf| = 0.0876)
+    Langkah 5: + dominant_frequency_hz  (Merit = 0.2004, |r_cf| = 0.1338)
+    Langkah 6: + max_ascending_slope    (Merit = 0.2017, |r_cf| = 0.0746)
+  Daftar Korelasi Relevansi Fitur (|r_cf|) terhadap Target (Ranking Top 10):
+     1. ibi_median_s           : 0.1573
+     2. heart_rate_bpm         : 0.1470
+     3. dominant_frequency_hz  : 0.1338
+     4. skewness               : 0.1146
+     5. spectral_power_ratio   : 0.1078
+     6. decay_time_s           : 0.1067
+     7. apg_d_a                : 0.1031
+     8. rise_time_s            : 0.0876
+     9. max_ascending_slope    : 0.0746
+    10. apg_b_a                : 0.0612
+--------------------------------------------------------------------------------
+TARGET: SPO2 (spo2_target_pct) [%]
+  Jumlah Fitur Terpilih: 2
+  Skor Merit Maksimum  : 0.3437
+  Urutan Forward Selection:
+    Langkah 1: + rise_time_s            (Merit = 0.2932, |r_cf| = 0.2932)
+    Langkah 2: + max_ascending_slope    (Merit = 0.3437, |r_cf| = 0.2394)
+  Daftar Korelasi Relevansi Fitur (|r_cf|) terhadap Target (Ranking Top 10):
+     1. rise_time_s            : 0.2932
+     2. max_ascending_slope    : 0.2394
+     3. min_descending_slope   : 0.2190
+     4. apg_b_a                : 0.2105
+     5. spectral_entropy       : 0.2077
+     6. pulse_width_50_s       : 0.1767
+     7. apg_e_a                : 0.1477
+     8. ibi_median_s           : 0.1463
+     9. pulse_amplitude        : 0.1330
+    10. decay_time_s           : 0.1037
+--------------------------------------------------------------------------------

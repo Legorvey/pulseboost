@@ -1,0 +1,83 @@
+==========================================================================================
+LAPORAN RINGKASAN INTERPRETASI MODEL XGBOOST MENGGUNAKAN SHAP (TAHAP 10)
+Proyek : Estimasi Tekanan Darah Cuffless & Saturasi Oksigen Menggunakan XGBoost
+Waktu  : 2026-11-02 09:11:17
+Lokasi : C:\Codes\UNIVERSITY PROJECTS (UNPAD)\Metode Penelitian KTI\KTI_XGBoost\results\xgboost_shap_summary.txt
+==========================================================================================
+
+[1. METODOLOGI DAN INTEGRITAS INTERPRETASI SHAP]
+------------------------------------------------------------------------------------------
+1. Analisis SHAP dieksekusi menggunakan shap.TreeExplainer terintegrasi dengan XGBoost 3.4.1.
+2. Model yang dijelaskan adalah persis model final yang digunakan pada evaluasi TEST:
+   - SBP : models/sbp_config_c.json (19 fitur)
+   - DBP : models/dbp_config_c.json (19 fitur)
+   - SpO2: models/spo2_config_d.json (2 fitur CFS: rise_time_s, max_ascending_slope)
+3. Pemilihan Sampel Deterministik:
+   - Sampel diambil secara independen dari set VALIDASI, BUKAN set TEST yang dipilih berdasarkan error.
+   - SBP dan DBP dievaluasi pada 1.000 jendela acak deterministik (random_state=42) dari 12.508 jendela validasi.
+   - SpO2 dievaluasi pada SELURUH 3.859 jendela set validasi dari 4 pasien.
+4. Verifikasi Aditivitas Numerik (Efficiency Property):
+   - Systolic Blood Pressure (SBP) : Max diff |model.predict - (base_val + sum(SHAP))| = 3.051758e-04 mmHg (LULUS SIFAT ADITIF)
+   - Diastolic Blood Pressure (DBP): Max diff |model.predict - (base_val + sum(SHAP))| = 1.602173e-04 mmHg (LULUS SIFAT ADITIF)
+   - Oxygen Saturation (SpO2)      : Max diff |model.predict - (base_val + sum(SHAP))| = 9.918213e-05 % (LULUS SIFAT ADITIF)
+
+[2. ATRIBUSI FITUR SYSTOLIC BLOOD PRESSURE (SBP - 19 FITUR)]
+------------------------------------------------------------------------------------------
+  - Nilai Rata-rata Ekspektasi Basis (Base Value): 130.2660 mmHg
+  - 5 Fitur Paling Berpengaruh (Berdasarkan Mean |SHAP|):
+    1. apg_b_a               : 5.2954 mmHg kontribusi rata-rata
+    2. apg_e_a               : 2.3938 mmHg kontribusi rata-rata
+    3. max_ascending_slope   : 1.9197 mmHg kontribusi rata-rata
+    4. apg_d_a               : 1.7966 mmHg kontribusi rata-rata
+    5. pulse_area            : 1.7929 mmHg kontribusi rata-rata
+  - Interpretasi Arah Pengaruh Fisiologis:
+    * Rasio turunan kedua gelombang fotopletismogram (APG), khususnya apg_b_a (kontribusi rata-rata 5.30 mmHg)
+      dan apg_e_a (2.39 mmHg), terbukti menjadi prediktor paling dominan dalam model XGBoost SBP.
+      Dalam literatur hemodinamik (Takazawa et al., 1998; Elgendi, 2012), gelombang 'b' pada APG mencerminkan
+      fase ejeksi ventrikel awal dan elastisitas arteri besar, sedangkan rasio b/a berkorelasi erat dengan kekakuan vaskular.
+    * Fitur morfologi kecepatan pulsa seperti max_ascending_slope (1.92 mmHg) dan pulse_area (1.79 mmHg)
+      menempati peringkat berikutnya, mencerminkan laju perubahan volume darah kapiler saat sistolik.
+    * Fitur interval waktu (ibi_median_s) dan variabilitas (ibi_cv) memodulasi tekanan darah secara sekunder.
+
+[3. ATRIBUSI FITUR DIASTOLIC BLOOD PRESSURE (DBP - 19 FITUR)]
+------------------------------------------------------------------------------------------
+  - Nilai Rata-rata Ekspektasi Basis (Base Value): 66.8730 mmHg
+  - 5 Fitur Paling Berpengaruh (Berdasarkan Mean |SHAP|):
+    1. apg_b_a               : 2.6419 mmHg kontribusi rata-rata
+    2. ibi_median_s          : 1.1294 mmHg kontribusi rata-rata
+    3. apg_d_a               : 1.1181 mmHg kontribusi rata-rata
+    4. min_descending_slope  : 0.8548 mmHg kontribusi rata-rata
+    5. skewness              : 0.8256 mmHg kontribusi rata-rata
+  - Interpretasi Arah Pengaruh Fisiologis:
+    * Serupa dengan SBP, apg_b_a (2.64 mmHg) kembali menjadi fitur terpenting untuk DBP, menegaskan
+      peran krusial akselerasi pulsasi perifer dalam estimasi tekanan darah cuffless.
+    * ibi_median_s (1.13 mmHg) menempati peringkat kedua; durasi fase diastolik sangat ditentukan oleh interval
+      antardenyut jantung (inter-beat interval), di mana denyut lebih lambat memperpanjang waktu peluruhan diastolik.
+    * apg_d_a (1.12 mmHg) dan min_descending_slope (0.85 mmHg) mencerminkan gelombang dicrotic dan kecepatan
+      penurunan tekanan balik selama fase penutupan katup aorta.
+
+[4. ATRIBUSI FITUR SATURASI OKSIGEN (SPO2 - 2 FITUR CFS)]
+------------------------------------------------------------------------------------------
+  - Nilai Rata-rata Ekspektasi Basis (Base Value): 95.2260 %
+  - Kontribusi Kedua Fitur Terpilih CFS:
+    1. max_ascending_slope   : 0.9305 % kontribusi rata-rata
+    2. rise_time_s           : 0.5878 % kontribusi rata-rata
+  - Interpretasi Arah Pengaruh Fisiologis:
+    * max_ascending_slope (0.93 %) memberikan kontribusi terbesar dalam model CFS 2-fitur, mencerminkan
+      perubahan laju perfusi oksigenasi jaringan mikrovaskular selama siklus pulsasi.
+    * rise_time_s (0.59 %) memberikan kontribusi teratur di mana waktu kenaikan yang lebih panjang berhubungan
+      dengan pergeseran estimasi saturasi ke arah yang lebih rendah.
+    * Batasan Fisik Mendasar: Karena sinyal PPG OSASUD hanya bersumber dari panjang gelombang tunggal (tanpa rasio
+      spektral Merah/Inframerah 'Ratio-of-Ratios'), model XGBoost hanya memanfaatkan keterkaitan morfologi pulsasi
+      dengan vasokonstriksi hipoksik, BUKAN penyerapan optik selektif oksihemoglobin (HbO2 vs Hb).
+
+[5. PERNYATAAN ILMIAH TENTANG BATASAN INTERPRETASI SHAP]
+------------------------------------------------------------------------------------------
+  1. Bukan Bukti Kausalitas Fisik (No Causal Proof):
+     Nilai SHAP merepresentasikan kontribusi marjinal fitur terhadap keluaran model pohon keputusan (XGBoost)
+     dalam meminimalkan fungsi loss, BUKAN bukti mekanisme fisiologis kausal langsung ataupun pengukuran
+     mekanis kekakuan pembuluh darah (arterial stiffness).
+  2. Ketergantungan Distribusi Data (Data-Dependent):
+     Tingginya pengaruh denyut jantung dan waktu kenaikan pulsa sangat dipengaruhi oleh distribusi statistik
+     jendela latihan pada populasi ICU (UCI) dan pasien OSA (OSASUD).
+==========================================================================================

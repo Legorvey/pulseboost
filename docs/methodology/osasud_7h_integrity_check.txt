@@ -1,0 +1,92 @@
+==========================================================================================
+LAPORAN PEMERIKSAAN INTEGRITAS DAN REKONSILIASI OSASUD TAHAP 7H (BAGIAN A)
+Proyek  : Estimasi Tekanan Darah Cuffless & Saturasi Oksigen (SpO2) Menggunakan XGBoost
+Tanggal : 2026-11-02
+Berkas  : results/osasud_19_features_full.csv
+==========================================================================================
+
+[1. JUMLAH BARIS DAN PASIEN UNIK]
+------------------------------------------------------------------------------------------
+- Total Baris Jendela Eligible : 27,455 baris (100% konsisten dengan laporan ekstraksi)
+- Total Pasien Unik            : 30 pasien (ID 1 s.d. 30 lengkap tanpa ada yang tertinggal/ganda)
+- Rentang Jendela per Pasien   : 241 jendela (Pasien 28) s.d. 1,340 jendela (Pasien 2)
+
+[2. AUDIT NILAI MISSING (NaN) DAN INFINITY PADA 19 FITUR]
+------------------------------------------------------------------------------------------
+Fitur                          | NaN Count | Inf Count | Status Kelengkapan
+------------------------------------------------------------------------------------------
+1.  ibi_median_s               |         0 |         0 | 100.00% Lengkap (Valid Fisiologis)
+2.  heart_rate_bpm             |         0 |         0 | 100.00% Lengkap (Valid Fisiologis)
+3.  ibi_cv                     |         0 |         0 | 100.00% Lengkap (Valid Fisiologis)
+4.  rise_time_s                |         0 |         0 | 100.00% Lengkap (Valid Fisiologis)
+5.  decay_time_s               |         0 |         0 | 100.00% Lengkap (Valid Fisiologis)
+6.  pulse_width_50_s           |         0 |         0 | 100.00% Lengkap (Valid Fisiologis)
+7.  pulse_amplitude            |         0 |         0 | 100.00% Lengkap (Valid Fisiologis)
+8.  pulse_area                 |         0 |         0 | 100.00% Lengkap (Valid Fisiologis)
+9.  max_ascending_slope        |         0 |         0 | 100.00% Lengkap (Valid Fisiologis)
+10. min_descending_slope       |         0 |         0 | 100.00% Lengkap (Valid Fisiologis)
+11. skewness                   |         0 |         0 | 100.00% Lengkap (Valid Fisiologis)
+12. kurtosis                   |         0 |         0 | 100.00% Lengkap (Valid Fisiologis)
+13. dominant_frequency_hz      |         0 |         0 | 100.00% Lengkap (Valid Fisiologis)
+14. spectral_power_ratio       |         0 |         0 | 100.00% Lengkap (Valid Fisiologis)
+15. spectral_entropy           |         0 |         0 | 100.00% Lengkap (Valid Fisiologis)
+16. apg_b_a                    |         0 |         0 | 100.00% Lengkap (Median Jendela)
+17. apg_c_a                    |         0 |         0 | 100.00% Lengkap (Median Jendela)
+18. apg_d_a                    |         0 |         0 | 100.00% Lengkap (Median Jendela)
+19. apg_e_a                    |         0 |         0 | 100.00% Lengkap (Median Jendela)
+------------------------------------------------------------------------------------------
+Total Nilai NaN Aktual        : 0 dari 521,645 sel nilai fitur (19 fitur x 27,455 jendela)
+Total Nilai Infinity Aktual   : 0 sel (Tidak ada nilai pembagian dengan nol atau ledakan numerik)
+
+[3. EVALUASI METADATA BEAT-LEVEL PADA TINGKAT JENDELA]
+------------------------------------------------------------------------------------------
+Metadata beat-level telah tersimpan secara eksplisit pada setiap baris jendela di CSV:
+- num_valid_beats            : Jumlah denyut PPG utuh terdeteksi dalam jendela 30s.
+- apg_b_a_valid_beats & pct  : Jumlah dan persentase denyut yang berhasil mendeteksi gelombang b.
+- apg_c_a_valid_beats & pct  : Jumlah dan persentase denyut yang berhasil mendeteksi gelombang c.
+- apg_d_a_valid_beats & pct  : Jumlah dan persentase denyut yang berhasil mendeteksi gelombang d.
+- apg_e_a_valid_beats & pct  : Jumlah dan persentase denyut yang berhasil mendeteksi gelombang e.
+- apg_reliable_coverage      : Flag boolean apakah jendela memiliki cakupan APG kokoh.
+
+Berdasarkan metadata tersebut, dilakukan audit syarat representatif:
+"Minimal 10 denyut APG valid dan minimal 20% cakupan denyut lengkap per rasio":
+- Jendela dengan num_valid_beats >= 10       : 27,455 jendela (100.00%) [Min beat = 19 denyut]
+- Jendela valid >=10 beat & apg_b_a_pct >= 20%: 27,455 jendela (100.00%)
+- Jendela valid >=10 beat & apg_c_a_pct >= 20%: 27,454 jendela ( 99.99%) [1 jendela memiliki 19.6%]
+- Jendela valid >=10 beat & apg_d_a_pct >= 20%: 27,452 jendela ( 99.99%) [3 jendela < 20%]
+- Jendela valid >=10 beat & apg_e_a_pct >= 20%: 27,418 jendela ( 99.87%) [37 jendela < 20%]
+
+[4. PENJELASAN MENGAPA KELENGKAPAN APG 100% PADA TINGKAT JENDELA]
+------------------------------------------------------------------------------------------
+Pertanyaan: Mengapa semua fitur APG dilaporkan memiliki kelengkapan 100%, padahal sebagian
+            titik APG gagal pada tingkat denyut?
+Jawaban   :
+1. Satu jendela berdurasi 30 detik memuat antara 19 hingga 48 denyut (rata-rata ~30 denyut).
+2. Algoritma V2 mengevaluasi titik a, b, c, d, e pada masing-masing denyut. Jika sebuah denyut
+   memiliki morfologi ambigu atau riak mikro, denyut tersebut TIDAK menghasilkan rasio (NaN pada denyut tersebut).
+3. Namun, di dalam jendela yang sama, terdapat denyut-denyut lain yang morfologinya jelas dan memenuhi syarat.
+   Contoh: Dari 30 denyut dalam satu jendela, gelombang e berhasil dideteksi pada 24 denyut (80%)
+   dan gagal pada 6 denyut (20%).
+4. Nilai agregasi jendela dihitung menggunakan np.median(list_denyut_valid). Karena selalu ada
+   setidaknya beberapa denyut yang valid (paling rendah 10.0% atau 3 denyut), maka fungsi median
+   selalu menghasilkan nilai numerik non-NaN pada tingkat jendela.
+5. Dengan demikian, "100% kelengkapan" adalah kelengkapan statistik di tingkat jendela (window-level),
+   bukan berarti 100% denyut individual berhasil dideteksi.
+
+[5. PEMERIKSAAN PREDIKTOR: QUALITY WARNING BUKAN PREDIKTOR]
+------------------------------------------------------------------------------------------
+- Kolom quality_warning berisi string diagnostik status ("NONE" atau "UNRELIABLE_IBI_INTERVALS").
+- Kolom ini berada di luar daftar 19 fitur kandidat numerik dan berfungsi eksklusif sebagai
+  metadata penanda kualitas.
+- Dipastikan: quality_warning TIDAK AKAN dimasukkan sebagai fitur input ke model regresi XGBoost.
+
+[6. PENETAPAN ANGKA DEFINITIF IBI CV PADA KASUS P1_W0720]
+------------------------------------------------------------------------------------------
+- Nilai Aktual pada results/osasud_19_features_full.csv     : 0.25498118396509833
+- Nilai Aktual pada results/osasud_19_features_pilot_v2.csv  : 0.25498118396509833
+- Pembulatan Resmi 4 Desimal                                 : 0.2550
+- Penjelasan Selisih dengan 0.2600:
+  Nilai 0.2600 adalah hasil estimasi awal pada pengujian scratch script sebelum refactoring final
+  algoritma plausibilitas IBI. Nilai terukur definitif yang dihasilkan oleh skrip ekstraksi resmi
+  dan tersimpan di seluruh berkas CSV adalah 0.2550 (atau 0.25498).
+==========================================================================================

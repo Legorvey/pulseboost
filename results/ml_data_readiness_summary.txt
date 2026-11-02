@@ -1,0 +1,66 @@
+==========================================================================================
+LAPORAN RINGKASAN REKONSILIASI FINAL DAN KESIAPAN DATA MODELING (TAHAP 9A)
+Proyek : Estimasi Tekanan Darah Cuffless & Saturasi Oksigen Menggunakan XGBoost
+Waktu  : 2026-11-02 08:10:57
+Lokasi : C:\Codes\UNIVERSITY PROJECTS (UNPAD)\Metode Penelitian KTI\KTI_XGBoost\results\ml_data_readiness_summary.txt
+==========================================================================================
+
+[1. PEMBAGIAN SPLIT DATASET UCI (RECORD-WISE GROUPING)]
+------------------------------------------------------------------------------------------
+  - Split TRAIN : 58,396 jendela (70.00%) | 6,730 record_id
+    * Target SBP (mmHg): Mean=130.28 +/- 22.13, Median=128.51, Min-Max=68.6-197.3
+    * Target DBP (mmHg): Mean=66.87 +/- 10.95, Median=64.71, Min-Max=50.0-129.1
+  - Split VAL   : 12,513 jendela (15.00%) | 1,459 record_id
+    * Target SBP (mmHg): Mean=128.55 +/- 21.88, Median=126.73, Min-Max=70.8-193.9
+    * Target DBP (mmHg): Mean=65.96 +/- 10.52, Median=63.55, Min-Max=50.5-128.2
+  - Split TEST  : 12,514 jendela (15.00%) | 1,435 record_id
+    * Target SBP (mmHg): Mean=129.15 +/- 22.10, Median=127.51, Min-Max=72.9-198.1
+    * Target DBP (mmHg): Mean=67.13 +/- 11.17, Median=65.01, Min-Max=50.6-129.4
+
+[2. PEMBAGIAN SPLIT DATASET OSASUD (PATIENT-WISE GROUPING)]
+------------------------------------------------------------------------------------------
+  - Split TRAIN : 18,890 jendela (68.80%) | 21 pasien: ['1', '2', '3', '4', '5', '6', '9', '10', '12', '13', '14', '16', '17', '18', '22', '23', '24', '25', '26', '28', '29']
+    * Target SpO2 (%)  : Mean=95.22 +/- 2.84, Median=96.00, Min-Max=64.0-100.0%
+    * Kasus Desaturasi (SpO2 < 90%):  815 jendela ( 4.31%)
+  - Split VAL   :  3,859 jendela (14.06%) |  4 pasien: ['19', '21', '27', '30']
+    * Target SpO2 (%)  : Mean=97.03 +/- 2.21, Median=97.00, Min-Max=85.0-100.0%
+    * Kasus Desaturasi (SpO2 < 90%):   18 jendela ( 0.47%)
+  - Split TEST  :  4,706 jendela (17.14%) |  5 pasien: ['7', '8', '11', '15', '20']
+    * Target SpO2 (%)  : Mean=95.50 +/- 2.36, Median=96.00, Min-Max=68.0-100.0%
+    * Kasus Desaturasi (SpO2 < 90%):   32 jendela ( 0.68%)
+
+[3. REKONSILIASI KUALITAS FITUR APG (PEMBERSIHAN DATA REPRESENTATIF)]
+------------------------------------------------------------------------------------------
+A. Dataset UCI:
+   * apg_b_a : Semula valid 83,423 -> Diubah ke NaN      0 -> Final valid 83,423 (100.0%)
+   * apg_c_a : Semula valid 80,587 -> Diubah ke NaN  2,685 -> Final valid 77,902 (93.38%)
+   * apg_d_a : Semula valid 77,082 -> Diubah ke NaN  8,835 -> Final valid 68,247 (81.81%)
+   * apg_e_a : Semula valid 77,082 -> Diubah ke NaN  8,835 -> Final valid 68,247 (81.81%)
+B. Dataset OSASUD:
+   * apg_b_a : Semula valid 27,455 -> Diubah ke NaN      0 -> Final valid 27,455 (100.0%)
+   * apg_c_a : Semula valid 27,455 -> Diubah ke NaN      2 -> Final valid 27,453 (99.99%)
+   * apg_d_a : Semula valid 27,455 -> Diubah ke NaN      7 -> Final valid 27,448 (99.97%)
+   * apg_e_a : Semula valid 27,455 -> Diubah ke NaN     75 -> Final valid 27,380 (99.73%)
+
+[4. REKONSILIASI KATEGORI TEKANAN DARAH MUTUALLY EXCLUSIVE]
+------------------------------------------------------------------------------------------
+  - Normal (SBP < 120 & DBP < 80)          : 29,461 jendela (35.34%)
+  - Elevated (SBP 120-129 & DBP < 80)      : 13,230 jendela (15.87%)
+  - Stage 1 HTN (SBP 130-139 | DBP 80-89)  : 13,551 jendela (16.26%)
+  - Stage 2 HTN (SBP >= 140 | DBP >= 90)   : 27,111 jendela (32.53%)
+  - Unlabeled (Kurang siklus ABP valid)    :     70 jendela
+  - TOTAL LABEL VALID                      : 83,353 jendela (100.00% Cocok Persis)
+
+[5. AUDIT KESESUAIAN RANCANGAN BAB I]
+------------------------------------------------------------------------------------------
+  - Chebyshev Type II [0.5, 8.0] Hz: 100% konsisten pada UCI dan OSASUD.
+  - Skewness SQI: 100% konsisten sebagai filter kualitas jendela.
+  - Standardisasi Fitur: XGBoost secara matematis tidak mewajibkan penskalaan fitur,
+    dan dipastikan TIDAK DILAKUKAN standardisasi global sebelum split (Anti-Leakage).
+  - Prediktor: Hanya 19 fitur kandidat PPG/APG murni yang digunakan sebagai fitur model.
+    Kanal ABP, ECG, PI, timestamp, label, dan quality_warning DIEKSKLUSI DARI FITUR.
+
+[6. STATUS KESIAPAN MODELING TAHAP BERIKUTNYA]
+------------------------------------------------------------------------------------------
+  STATUS: DATASET MODELING 100% SIAP DAN TERKUNCI.
+  Seluruh data test independen telah diisolasi dan belum pernah tersentuh oleh model.

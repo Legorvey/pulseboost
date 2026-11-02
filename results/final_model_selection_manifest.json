@@ -1,0 +1,195 @@
+{
+  "manifest_version": "1.0.0",
+  "created_at": "2026-11-02T08:33:00+07:00",
+  "project": "KTI_XGBoost",
+  "title": "Estimasi Tekanan Darah Cuffless dan Saturasi Oksigen Menggunakan XGBoost",
+  "stage": "TAHAP_9C_FINAL_VALIDATION_SELECTION",
+  "status": "READY_FOR_TEST_EVALUATION_PENDING_USER_APPROVAL",
+  "test_set_isolation": {
+    "status": "LOCKED_AND_SEALED",
+    "uci_test_windows": 12514,
+    "uci_test_records": 1435,
+    "osasud_test_windows": 4706,
+    "osasud_test_patients": 5,
+    "leakage_verified": false
+  },
+  "selected_candidate_models": {
+    "sbp": {
+      "target": "sbp",
+      "target_name": "Systolic Blood Pressure",
+      "unit": "mmHg",
+      "dataset": "UCI Cuffless Blood Pressure (Kaggle/PhysioNet)",
+      "sampling_rate_hz": 125,
+      "selected_config": "config_c",
+      "config_label": "Config C (All 19 Features)",
+      "num_features": 19,
+      "features_list": [
+        "ibi_median_s",
+        "heart_rate_bpm",
+        "ibi_cv",
+        "rise_time_s",
+        "decay_time_s",
+        "pulse_width_50_s",
+        "pulse_amplitude",
+        "pulse_area",
+        "max_ascending_slope",
+        "min_descending_slope",
+        "skewness",
+        "kurtosis",
+        "dominant_frequency_hz",
+        "spectral_power_ratio",
+        "spectral_entropy",
+        "apg_b_a",
+        "apg_c_a",
+        "apg_d_a",
+        "apg_e_a"
+      ],
+      "model_file": "models/sbp_config_c.json",
+      "metadata_file": "models/sbp_config_c_metadata.json",
+      "train_samples": 58338,
+      "validation_samples": 12508,
+      "best_iteration": 999,
+      "max_estimators": 1000,
+      "convergence_status": "ESTIMATOR_BUDGET_BOUNDED",
+      "convergence_note": "Stopped at iteration 999 of 1000. Loss still gradually declining; not proven to have converged globally.",
+      "validation_metrics": {
+        "mae": 13.2203,
+        "rmse": 17.2178,
+        "me": 1.2984,
+        "std_me": 17.1695,
+        "pearson_r": 0.6208
+      },
+      "baseline_comparisons": {
+        "baseline_mean_train": {
+          "value": 130.28,
+          "val_mae": 17.9867,
+          "val_rmse": 21.9423,
+          "val_r": null
+        },
+        "baseline_median_train": {
+          "value": 128.51,
+          "val_mae": 17.8338,
+          "val_rmse": 21.8742,
+          "val_r": null
+        }
+      },
+      "limitations": [
+        "Partitioning is record-grouped, not strictly biometrically verified patient-independent.",
+        "Validation performance cannot be claimed to meet clinical AAMI/BHS standards."
+      ]
+    },
+    "dbp": {
+      "target": "dbp",
+      "target_name": "Diastolic Blood Pressure",
+      "unit": "mmHg",
+      "dataset": "UCI Cuffless Blood Pressure (Kaggle/PhysioNet)",
+      "sampling_rate_hz": 125,
+      "selected_config": "config_c",
+      "config_label": "Config C (All 19 Features)",
+      "num_features": 19,
+      "features_list": [
+        "ibi_median_s",
+        "heart_rate_bpm",
+        "ibi_cv",
+        "rise_time_s",
+        "decay_time_s",
+        "pulse_width_50_s",
+        "pulse_amplitude",
+        "pulse_area",
+        "max_ascending_slope",
+        "min_descending_slope",
+        "skewness",
+        "kurtosis",
+        "dominant_frequency_hz",
+        "spectral_power_ratio",
+        "spectral_entropy",
+        "apg_b_a",
+        "apg_c_a",
+        "apg_d_a",
+        "apg_e_a"
+      ],
+      "model_file": "models/dbp_config_c.json",
+      "metadata_file": "models/dbp_config_c_metadata.json",
+      "train_samples": 58338,
+      "validation_samples": 12508,
+      "best_iteration": 996,
+      "max_estimators": 1000,
+      "convergence_status": "ESTIMATOR_BUDGET_BOUNDED",
+      "convergence_note": "Stopped at iteration 996 of 1000. Loss still gradually declining; not proven to have converged globally.",
+      "validation_metrics": {
+        "mae": 6.5667,
+        "rmse": 9.067,
+        "me": 0.4999,
+        "std_me": 9.0536,
+        "pearson_r": 0.5101
+      },
+      "baseline_comparisons": {
+        "baseline_mean_train": {
+          "value": 66.87,
+          "val_mae": 8.3272,
+          "val_rmse": 10.5566,
+          "val_r": null
+        },
+        "baseline_median_train": {
+          "value": 64.71,
+          "val_mae": 7.9603,
+          "val_rmse": 10.5907,
+          "val_r": null
+        }
+      },
+      "limitations": [
+        "Partitioning is record-grouped, not strictly biometrically verified patient-independent.",
+        "Validation performance cannot be claimed to meet clinical AAMI/BHS standards."
+      ]
+    },
+    "spo2": {
+      "target": "spo2",
+      "target_name": "Oxygen Saturation",
+      "unit": "%",
+      "dataset": "OSASUD (30 Patients nocturnal PSG)",
+      "sampling_rate_hz": 80,
+      "selected_config": "config_d",
+      "config_label": "Config D (CFS Selected: 2 Features)",
+      "num_features": 2,
+      "features_list": [
+        "rise_time_s",
+        "max_ascending_slope"
+      ],
+      "model_file": "models/spo2_config_d.json",
+      "metadata_file": "models/spo2_config_d_metadata.json",
+      "train_samples": 18890,
+      "validation_samples": 3859,
+      "best_iteration": 284,
+      "max_estimators": 1000,
+      "convergence_status": "CONVERGED_EARLY_STOPPING",
+      "convergence_note": "Early stopping triggered at iteration 284 after reaching optimal validation plateau.",
+      "validation_metrics": {
+        "mae": 1.6912,
+        "rmse": 2.0742,
+        "me": -0.8242,
+        "std_me": 1.9037,
+        "pearson_r": 0.5079,
+        "unweighted_patient_mae": 1.69
+      },
+      "baseline_comparisons": {
+        "baseline_mean_train": {
+          "value": 95.22,
+          "val_mae": 2.4491,
+          "val_rmse": 2.8526,
+          "val_r": null
+        },
+        "baseline_median_train": {
+          "value": 96.0,
+          "val_mae": 2.0387,
+          "val_rmse": 2.4369,
+          "val_r": null
+        }
+      },
+      "limitations": [
+        "Error increases for severe desaturation SpO2 < 90% (MAE 7.76%, n=18 rare samples).",
+        "CFS selection is statistical/heuristic, not causal physiological proof.",
+        "Model is a non-invasive research approximation, not a certified clinical pulse oximeter."
+      ]
+    }
+  }
+}

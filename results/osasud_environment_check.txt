@@ -1,0 +1,89 @@
+================================================================================
+LAPORAN AUDIT LINGKUNGAN DAN PEMERIKSAAN KAPASITAS KOMPUTER (TAHAP 7A)
+Proyek: Deteksi Dini Risiko OSA berbasis PPG & APG (KTI_XGBoost)
+Waktu Audit: 2026-11-01 23:53:00
+================================================================================
+
+[1. STATUS KEBERADAAN DAN UKURAN DATASET OSASUD]
+  Target File           : data/osasud/dataset_OSAS.pickle
+  Status Keberadaan     : DITEMUKAN (ADA)
+  Lokasi Absolut        : C:\Codes\UNIVERSITY PROJECTS (UNPAD)\Metode Penelitian KTI\KTI_XGBoost\data\osasud\dataset_OSAS.pickle
+  Ukuran File (Biner)   : 3.05 GiB (3,280,142,234 bytes)
+  Ukuran File (Desimal) : 3.28 GB (3,280.14 MB)
+  Integritas Serialisasi: File belum dimuat (sesuai protokol keamanan Tahap 7A).
+
+[2. SPESIFIKASI DAN KONDISI SISTEM KOMPUTER]
+  Sistem Operasi        : Windows 11 (Versi: 10.0.26200)
+  Arsitektur OS         : AMD64 (64bit)
+  Versi Python          : Python 3.13.2 (64bit)
+  Virtual Environment   : C:\Codes\UNIVERSITY PROJECTS (UNPAD)\Metode Penelitian KTI\.venv (Aktif)
+  Total RAM Fisik       : 15.80 GB (16,961,822,720 bytes)
+  RAM Terpakai Saat Ini : 12.14 GB (76.8%)
+  RAM Bebas/Tersedia    : 3.66 GB (3,929,202,688 bytes)
+  Total Swap/Pagefile   : 14.00 GB
+  Swap Bebas            : 12.91 GB
+  Drive Proyek (C:)    : Total 474.72 GB | Bebas 153.94 GB (32.4%)
+
+[3. STATUS KESIAPAN LIBRARY PYTHON]
+  - pandas              : 3.1.0 (Status: SIAP)
+  - numpy               : 2.5.4 (Status: SIAP)
+  - psutil              : 7.2.2 (Status: SIAP / Berhasil diinstal)
+  Semua library yang dibutuhkan untuk monitoring dan pengolahan data sudah terpasang di .venv.
+
+[4. ACUAN STRUKTUR DATASET (Berdasarkan Publikasi Resmi OSASUD)]
+  (Catatan: Informasi di bawah ini adalah acuan literatur Scientific Data, BUKAN hasil pembacaan file)
+  - Estimasi Jumlah Baris   : 961,357 baris
+  - Estimasi Jumlah Kolom   : 18 kolom
+  - Kolom Utama Relevan     : patient, timestamp_datetime, signal_pleth, SpO2(%), PI(%)
+  - Frekuensi Sampling PPG  : 80 Hz (kolom 'signal_pleth')
+  - Frekuensi Sampling SpO2 : 1 Hz (kolom 'SpO2(%)')
+  - Frekuensi Sampling PI   : 1 Hz (kolom 'PI(%)')
+  - Fisiologis & Temporal  : Setiap baris merepresentasikan jendela waktu 1 detik rekaman.
+    Pada 80 Hz, 1 detik = 80 titik gelombang PPG per baris.
+    Total titik sinyal PPG di seluruh dataset = 961,357 x 80 = 76,908,560 sampel!
+
+[5. ANALISIS ESTIMASI KEBUTUHAN DAN RISIKO PENGGUNAAN MEMORI (RAM)]
+  PENTING: Ukuran file di disk (3,05 GB) TIDAK SAMA dengan kebutuhan RAM saat objek dimuat!
+  Faktor-faktor pelipatgandaan memori pada file Pickle:
+  1. Sifat Serialisasi Pickle: Modul pickle menyimpan representasi hierarki objek Python.
+     Saat proses unpickling (pickle.load), Python tidak hanya membaca byte dari disk, tetapi
+     harus menginstansiasi struktur objek Python lengkap, tabel memo referensi, dan pointer memory.
+  2. Overhead Objek Kolom 'signal_pleth': Kolom ini berisi array sinyal gelombang frekuensi 80 Hz.
+     Jika disimpan sebagai kolom bertipe 'object' (kumpulan 961.357 array/list individual), setiap baris
+     memiliki overhead PyObject (pointer, metadata tipe, dsb.) yang melipatgandakan ukuran footprint.
+  3. Lonjakan Memori Puncak (Peak Memory Spike): Selama proses pickle.load(), modul pickle menahan
+     buffer streaming di memori bersamaan dengan pembangunan DataFrame. Alokasi puncak biasanya
+     mencapai 2,0x hingga 3,0x ukuran berkas asli di disk (estimasi 6,5 GB hingga 9,5 GB).
+  4. Ruang Operasi Lanjutan (Working Buffer): Setelah DataFrame dimuat, operasi indexing, slicing,
+     atau konversi tipe data membutuhkan RAM tambahan sebesar 1,0x - 1,5x ukuran DataFrame.
+
+  Estimasi Kebutuhan RAM:
+  - Ukuran file di disk            : ~3,05 GB
+  - Estimasi ukuran objek di RAM   : ~4,50 - 6,00 GB
+  - Estimasi lonjakan RAM puncak   : ~7,50 - 10,00 GB
+  - Ambang batas aman RAM bebas    : Minimal 10,00 - 11,00 GB RAM bebas
+
+[6. KESIMPULAN KELAYAKAN DAN REKOMENDASI TINDAKAN]
+  - Status Keberadaan File : OK (Ditemukan, ukuran 3.05 GiB / 3.28 GB)
+  - Status Kapasitas Disk  : AMAN (Tersedia 153.94 GB bebas pada drive C:)
+  - Status Kesiapan Python : AMAN (Python 3.13.2, pandas 3.1.0, numpy 2.5.4, psutil 7.2.2)
+  - Status Kapasitas RAM   : BERISIKO TINGGI (KRITIS)
+    Penjelasan: RAM yang tersedia saat ini HANYA 3.66 GB (76.8% terpakai). Jika file pickle 3.05 GB dimuat sekarang, kemungkinan besar komputer akan mengalami MemoryError (out-of-memory crash) atau sistem Windows akan freeze/hang parah akibat swapping besar-besaran ke disk (paging thrashing).
+
+  REKOMENDASI SEBELUM TAHAP 7B (MEMBUKA/MEMUAT DATASET):
+  1. Total RAM fisik komputer (16 GB) secara teoritis CUKUP untuk dataset ini.
+  2. Namun saat ini pengguna sedang membuka aplikasi berat (RAM terpakai 76.8%).
+     Aplikasi utama yang sedang memakan RAM:
+     * firefox.exe: 3079.4 MB (3.01 GB)
+     * Antigravity IDE.exe: 2149.6 MB (2.10 GB)
+     * msedgewebview2.exe: 1242.8 MB (1.21 GB)
+     * svchost.exe: 1178.7 MB (1.15 GB)
+     * MemCompression: 952.0 MB (0.93 GB)
+  3. TINDAKAN WAJIB PENGGUNA SEBELUM TAHAP 7B:
+     - Tutup browser (terutama tab Firefox/Chrome yang banyak) dan aplikasi lain yang tidak diperlukan.
+     - Targetkan agar RAM yang tersedia mencapai minimal 10 - 11 GB sebelum script pembacaan dijalankan.
+  4. STRATEGI TEKNIS TAHAP 7B YANG DIREKOMENDASIKAN:
+     - Jangan langsung meload seluruh kolom jika tidak diperlukan (atau pertimbangkan inspeksi metadata awal).
+     - Pastikan skrip pembacaan berikutnya menyertakan error-handling MemoryError dan garbage collection (gc.collect()).
+     - Mengonversi data ke format yang lebih efisien dan terindeks (seperti Parquet / HDF5 / Feather per pasien) setelah berhasil dibuka.
+================================================================================

@@ -1,0 +1,48 @@
+{
+  "target": "spo2",
+  "target_name": "Oxygen Saturation (SpO2)",
+  "unit": "%",
+  "config_tag": "config_a",
+  "config_label": "Config A (15 PPG + b/a)",
+  "num_features": 16,
+  "features_list": [
+    "ibi_median_s",
+    "heart_rate_bpm",
+    "ibi_cv",
+    "rise_time_s",
+    "decay_time_s",
+    "pulse_width_50_s",
+    "pulse_amplitude",
+    "pulse_area",
+    "max_ascending_slope",
+    "min_descending_slope",
+    "skewness",
+    "kurtosis",
+    "dominant_frequency_hz",
+    "spectral_power_ratio",
+    "spectral_entropy",
+    "apg_b_a"
+  ],
+  "parameters": {
+    "objective": "reg:squarederror",
+    "tree_method": "hist",
+    "n_estimators": 1000,
+    "learning_rate": 0.05,
+    "max_depth": 4,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "reg_lambda": 1.0,
+    "random_state": 42,
+    "early_stopping_rounds": 50,
+    "eval_metric": "mae",
+    "n_jobs": 4
+  },
+  "best_iteration": 63,
+  "validation_metrics": {
+    "mae": 2.2001504099841687,
+    "rmse": 2.6164870376301517,
+    "me": -1.6054907900337483,
+    "std_me": 2.0662792934484804,
+    "r": 0.38338824494639306
+  }
+}

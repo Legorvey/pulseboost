@@ -1,0 +1,36 @@
+{
+  "target": "sbp",
+  "target_name": "Systolic Blood Pressure (SBP)",
+  "unit": "mmHg",
+  "config_tag": "config_d",
+  "config_label": "Config D (CFS Selected)",
+  "num_features": 4,
+  "features_list": [
+    "apg_c_a",
+    "apg_b_a",
+    "decay_time_s",
+    "max_ascending_slope"
+  ],
+  "parameters": {
+    "objective": "reg:squarederror",
+    "tree_method": "hist",
+    "n_estimators": 1000,
+    "learning_rate": 0.05,
+    "max_depth": 4,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "reg_lambda": 1.0,
+    "random_state": 42,
+    "early_stopping_rounds": 50,
+    "eval_metric": "mae",
+    "n_jobs": 4
+  },
+  "best_iteration": 997,
+  "validation_metrics": {
+    "mae": 15.09784639161503,
+    "rmse": 19.302586782243765,
+    "me": 1.503769245431947,
+    "std_me": 19.244691326282048,
+    "r": 0.4758314752043728
+  }
+}

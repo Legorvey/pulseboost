@@ -1,0 +1,100 @@
+==================================================================================
+LAPORAN HASIL EKSTRAKSI EMPAT RASIO APG & TABEL 19 FITUR (TAHAP 6B)
+Dataset: UCI Part_1 (Rekaman 0, 1, 2) | Total: 45 Jendela (30 detik)
+Frekuensi Sampling (fs): 125 Hz | Panjang Jendela: 3750 sampel
+==================================================================================
+
+[1. METODE DIFERENSIASI & PENGURANGAN NOISE]
+- Metode yang Digunakan: Filter Savitzky-Golay pada sinyal kontinu rekaman panjang.
+- Parameter SG: window_length = 11 sampel (~88 ms), polyorder = 3, delta = 1/fs.
+- Evaluasi Noise vs Turunan Numerik Biasa:
+  * Korelasi SG vs Turunan Numerik murni: r = 0.9991 (keselarasan bentuk gelombang sempurna).
+  * Standar deviasi APG SG: 179.66 a.u./s^2 vs APG Numerik: 193.04 a.u./s^2.
+  * Savitzky-Golay berhasil mereduksi fluktuasi noise diferensiasi frekuensi tinggi sebesar ~7%
+    tanpa menyebabkan distorsi fase ataupun pergeseran posisi temporal puncak gelombang.
+
+[2. KELENGKAPAN EKSTRAKSI 19 FITUR (FEATURE COMPLETENESS)]
+- Total Jendela yang Diproses: 45 jendela
+- 15 Fitur PPG Sebelumnya: 45 dari 45 jendela (100.0% lengkap)
+- Fitur apg_b_a: 45 dari 45 jendela (100.0%)
+- Fitur apg_c_a: 45 dari 45 jendela (100.0%)
+- Fitur apg_d_a: 42 dari 45 jendela (93.3%)
+- Fitur apg_e_a: 42 dari 45 jendela (93.3%)
+  * Catatan Integritas Data: Tiga jendela pada Record 0 (Jendela 0, 3, 4) memiliki status NaN
+    pada apg_d_a dan apg_e_a karena gelombang d dan e secara fisiologis tidak muncul pada denyut
+    jendela tersebut (tipe vaskular kaku/teredam). Nilai ini TIDAK dipaksakan diisi nol.
+
+[3. STATISTIK TINGKAT DENYUT (BEAT-LEVEL TRACKING)]
+- Total Denyut Lengkap Dievaluasi: 2628 denyut (Rata-rata 58.4 per jendela)
+- Denyut dengan Gelombang a & b Valid: 2626 denyut (99.92%)
+- Rata-rata Persentase Keberhasilan Deteksi per Jendela:
+  * Rasio b/a : 99.92% (Rentang: 98.2% s.d. 100.0%)
+  * Rasio c/a : 98.92% (Rentang: 92.7% s.d. 100.0%)
+  * Rasio d/a : 17.75% (Rentang: 0.0% s.d. 87.0%)
+  * Rasio e/a : 17.75% (Rentang: 0.0% s.d. 87.0%)
+
+[4. DISTRIBUSI STATISTIK EMPAT RASIO APG (WINDOW MEDIANS)]
+Fitur APG    Satuan      N_Valid       Min    Median       Max      Mean       Std
+----------------------------------------------------------------------------------
+apg_b_a      rasio            45   -1.2602   -1.2130   -1.1747   -1.2167    0.0227
+apg_c_a      rasio            45    0.2885    0.3341    0.4138    0.3363    0.0297
+apg_d_a      rasio            42   -0.8586    0.1185    0.2612    0.0797    0.1974
+apg_e_a      rasio            42    0.0737    0.1874    0.9865    0.2486    0.2169
+
+[5. DISTRIBUSI STATISTIK SELURUH 19 FITUR (TABEL LENGKAP)]
+Nama Fitur               Satuan           Min    Median       Max      Mean       Std
+----------------------------------------------------------------------------------
+ibi_median_s             s             0.4800    0.5040    0.5440    0.5035    0.0150
+heart_rate_bpm           BPM         110.2900  119.0500  125.0000  119.2767    3.5143
+ibi_cv                   rasio         0.0113    0.0363    0.1841    0.0506    0.0448
+rise_time_s              s             0.1520    0.1520    0.1600    0.1525    0.0020
+decay_time_s             s             0.3280    0.3440    0.3840    0.3499    0.0144
+pulse_width_50_s         s             0.1660    0.1711    0.1781    0.1713    0.0027
+pulse_amplitude          a.u.          1.7254    1.8872    1.9479    1.8739    0.0505
+pulse_area               a.u.*s        0.3386    0.3789    0.4020    0.3773    0.0116
+max_ascending_slope      a.u./s       18.8850   20.3353   21.0831   20.2929    0.5018
+min_descending_slope     a.u./s      -13.1462  -12.4833  -11.4956  -12.4900    0.3500
+skewness                 rasio         0.4254    0.5689    0.7016    0.5618    0.0515
+kurtosis                 rasio        -1.1117   -0.9682   -0.1253   -0.8872    0.2196
+dominant_frequency_hz    Hz            1.9531    1.9531    2.1973    1.9694    0.0616
+spectral_power_ratio     rasio         0.6934    0.8250    0.8532    0.8158    0.0284
+spectral_entropy         rasio         0.4238    0.4757    0.6893    0.5012    0.0642
+apg_b_a                  rasio        -1.2602   -1.2130   -1.1747   -1.2167    0.0227
+apg_c_a                  rasio         0.2885    0.3341    0.4138    0.3363    0.0297
+apg_d_a                  rasio        -0.8586    0.1185    0.2612    0.0797    0.1974
+apg_e_a                  rasio         0.0737    0.1874    0.9865    0.2486    0.2169
+
+[6. EVALUASI FISIOLOGIS DAN KESESUAIAN LITERATUR]
+1. Urutan Waktu & Polaritas Gelombang (Takazawa 1998, Qawqzeh 2015):
+   - Gelombang a: Positif (+260 s.d. +330 a.u./s^2), terjadi pada upstroke awal (t ~ 24-32 ms).
+   - Gelombang b: Negatif (-330 s.d. -410 a.u./s^2), terjadi tepat sebelum puncak sistolik (t ~ 136-144 ms).
+   - Gelombang c: Positif (+85 s.d. +137 a.u./s^2), terjadi pada sistolik lanjut (t ~ 256-272 ms).
+   - Gelombang d: Lembah deselerasi sistolik lanjut (t ~ 328-344 ms).
+   - Gelombang e: Positif (+26 s.d. +60 a.u./s^2), terjadi pada fase dicrotic diastolik (t ~ 368 ms).
+   - Seluruh gelombang yang terdeteksi memenuhi relasi temporal ketat: t_a < t_b < t_c < t_d < t_e.
+2. Nilai Rasio b/a (Arterial Stiffness & Compliance):
+   - Median b/a adalah -1.2130 (rentang: -1.2602 s.d. -1.1747).
+   - Nilai negatif ini konsisten sempurna dengan literatur (Elgendi 2012, Yang 2021),
+     di mana b/a merefleksikan elastisitas dinding pembuluh darah arteri besar.
+3. Nilai Rasio c/a, d/a, dan e/a:
+   - Median c/a: 0.3341 (positif, late systolic re-acceleration).
+   - Median d/a: 0.1185 (mendekati nol, batas deselerasi late systole).
+   - Median e/a: 0.1874 (positif, pantulan gelombang katup aorta dicrotic).
+4. Fenomena Morfologi Tipe Vaskular (Takazawa Type A vs Type B/D):
+   - Record 2 menunjukkan gelombang d dan e yang jelas pada 42.8% denyut (tipe vaskular compliant).
+   - Record 0 menunjukkan transisi mulus tanpa pantulan dicrotic yang tajam (tipe kaku/teredam),
+     sehingga gelombang d dan e secara alami absen pada mayoritas denyut.
+   - Keputusan untuk tidak merekayasa titik d dan e dan membiarkan jendela tersebut bernilai NaN
+     menjaga kemurnian saintifik dataset sesuai kaidah integritas data.
+
+[7. KETERBATASAN METODOLOGI TAHAP 6B]
+1. Parameter Savitzky-Golay (window=11, order=3):
+   Dipilih sebagai kandidat awal sesuai spesifikasi instruksi. Meskipun menghasilkan korelasi
+   0.9991 dengan turunan numerik murni, optimasi panjang jendela SG adaptif terhadap denyut jantung
+   dapat dieksplorasi lebih lanjut di masa mendatang.
+2. Amplitudo Pembagi Titik a:
+   Seluruh denyut yang digunakan memiliki a > 150 a.u./s^2, sehingga tidak ditemukan risiko
+   pembagian dengan nol (zero division) pada dataset pilot ini.
+3. Tidak Ada Penggunaan Sinyal ABP / ECG:
+   Seluruh ekstraksi fitur 100% murni diturunkan dari kanal PPG.
+==================================================================================

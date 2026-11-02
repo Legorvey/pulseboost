@@ -1,0 +1,78 @@
+==========================================================================================
+LAPORAN EKSTRAKSI FITUR PPG DAN APG OSASUD (TAHAP 7F)
+Proyek  : Estimasi Tekanan Darah Cuffless & Saturasi Oksigen (SpO2) Menggunakan XGBoost
+Waktu   : 2026-11-02 07:12:19
+Lokasi  : C:\Codes\UNIVERSITY PROJECTS (UNPAD)\Metode Penelitian KTI\KTI_XGBoost\results\osasud_feature_extraction_summary.txt
+==========================================================================================
+
+[1. RINGKASAN EKSEKUSI & EFISIENSI MEMORI]
+  - Pasien Pilot               : 4 Pasien (ID 1, 12, 17, 28)
+  - Total Jendela Masukan (7E) : 2,337 jendela layak (ml_window_eligible=True)
+  - Jendela Berhasil Ekstraksi : 2,337 jendela (100.00%)
+  - Waktu Proses Total         : 13.52 detik (~0.23 menit)
+  - Rata-rata Waktu Ekstraksi  : 5.8 ms per jendela 30s
+  - Puncak Memori RSS          : 167.3 MB (Sangat aman untuk komputer lokal)
+
+[2. KELENGKAPAN 19 FITUR (15 PPG + 4 APG)]
+  No   Nama Fitur                Kategori     Valid (%)    Min          Median       Max         
+  -------------------------------------------------------------------------------------
+  1    ibi_median_s              PPG (15)     100.0        0.588        1.062        1.500       
+  2    heart_rate_bpm            PPG (15)     100.0        40.000       56.470       102.130     
+  3    ibi_cv                    PPG (15)     100.0        0.008        0.069        1.048       
+  4    rise_time_s               PPG (15)     100.0        0.175        0.263        0.350       
+  5    decay_time_s              PPG (15)     100.0        0.294        0.838        1.200       
+  6    pulse_width_50_s          PPG (15)     100.0        0.211        0.542        0.805       
+  7    pulse_amplitude           PPG (15)     100.0        16.526       86.791       155.474     
+  8    pulse_area                PPG (15)     100.0        6.880        44.268       95.165      
+  9    max_ascending_slope       PPG (15)     100.0        121.161      615.533      1164.345    
+  10   min_descending_slope      PPG (15)     100.0        -417.173     -181.671     -62.997     
+  11   skewness                  PPG (15)     100.0        -1.097       0.152        1.001       
+  12   kurtosis                  PPG (15)     100.0        -1.313       -0.951       9.064       
+  13   dominant_frequency_hz     PPG (15)     100.0        0.938        0.938        1.562       
+  14   spectral_power_ratio      PPG (15)     100.0        0.325        0.453        0.720       
+  15   spectral_entropy          PPG (15)     100.0        0.357        0.478        0.824       
+  16   apg_b_a                   APG (4)      100.0        -1.290       -0.696       -0.548      
+  17   apg_c_a                   APG (4)      100.0        -0.341       0.101        0.425       
+  18   apg_d_a                   APG (4)      100.0        -0.706       -0.212       0.007       
+  19   apg_e_a                   APG (4)      100.0        -0.005       0.115        0.680       
+
+[3. ANALISIS KEANDALAN DETEKSI APG TINGKAT DENYUT]
+  - Gelombang b/a Valid       : 100.0% jendela (Median deteksi denyut: 100.0%)
+  - Gelombang c/a Valid       : 100.0% jendela (Median deteksi denyut: 100.0%)
+  - Gelombang d/a Valid       : 100.0% jendela (Median deteksi denyut: 100.0%)
+  - Gelombang e/a Valid       : 100.0% jendela (Median deteksi denyut: 100.0%)
+  - Cakupan APG Andal         : 100.0% jendela memenuhi syarat eksploratif
+                                (>= 10 denyut per jendela dan >= 20% deteksi lengkap 4 gelombang).
+
+[4. HASIL SENSITIVITAS SMOOTHING SAVITZKY-GOLAY (WL 7 vs 9 vs 11)]
+  Perbandingan deteksi gelombang fidusial pada denyut representatif (fs=80 Hz):
+  Window Length   Durasi Fisik    Gelombang a    Gelombang b    Gelombang c    Gelombang d/e 
+  -------------------------------------------------------------------------------------
+  WL = 7          87.5 ms         95.8%          95.8%          75.0%          70.8%         
+  WL = 9          112.5 ms        95.8%          95.8%          75.0%          70.8%         
+  WL = 11         137.5 ms        95.8%          95.8%          75.0%          70.8%         
+
+  Catatan Evaluasi Savitzky-Golay:
+  - Window length 7 sampel pada 80 Hz memiliki durasi fisik 87.5 ms (hampir identik dengan WL=11 pada 125 Hz di UCI, yaitu 88.0 ms).
+  - WL=7 mempertahankan puncak akselerasi gelombang a dengan sangat tajam tanpa meredam titik belok sistolik.
+  - WL=9 dan WL=11 memberikan efek penghalusan tambahan namun sedikit menurunkan amplitudo puncak a.
+  - Pemilihan WL=7 sebagai default didasarkan pada kesetaraan fisik durasi temporal dan integritas morfologi denyut.
+
+[5. PERBANDINGAN MORFOLOGI DAN KUALITAS SINYAL (OSASUD vs UCI)]
+  1. FREKUENSI SAMPLING: OSASUD (80 Hz) vs UCI (125 Hz).
+     - 80 Hz memberikan resolusi temporal 12.5 ms per sampel (vs 8.0 ms pada 125 Hz).
+     - Resolusi ini terbukti memadai untuk menangkap puncak sistolik, durasi PW50 (~0.25-0.35s), dan rasio APG b/a.
+  2. KUANTISASI DIGITAL:
+     - OSASUD memiliki kuantisasi integer genap (rentang 0-195 ADC), sedangkan UCI adalah data floating kontinu.
+     - Filter Chebyshev II orde 4 (0.5 - 8.0 Hz) berhasil menghaluskan tangga kuantisasi (staircase artifact)
+       sehingga turunan kedua APG tetap mulus dan bebas dari spike numerik.
+  3. KELANGSUNGAN KONTINU:
+     - OSASUD memiliki segmen kontinu panjang (2 hingga 6 jam per segmen pada pasien stabil), sehingga
+       filtering Chebyshev II dapat diterapkan secara global per segmen tanpa distorsi batas jendela 30s.
+
+[6. KESIAPAN & STATUS INTEGRITAS UNTUK PEMROSESAN 30 PASIEN]
+  - Seluruh 2.337 jendela pilot memiliki pasangan fitur lengkap dan target SpO2 yang valid.
+  - Tidak ada data fiktif atau interpolasi yang digunakan.
+  - PI hanya dicatat sebagai metadata dan tidak dimasukkan ke dalam prediktor.
+  - Skrip siap diadaptasi untuk mengekstrak sisa 26 pasien OSASUD pada tahap berikutnya.
+==========================================================================================

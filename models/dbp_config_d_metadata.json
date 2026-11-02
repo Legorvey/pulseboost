@@ -1,0 +1,38 @@
+{
+  "target": "dbp",
+  "target_name": "Diastolic Blood Pressure (DBP)",
+  "unit": "mmHg",
+  "config_tag": "config_d",
+  "config_label": "Config D (CFS Selected)",
+  "num_features": 6,
+  "features_list": [
+    "ibi_median_s",
+    "skewness",
+    "apg_d_a",
+    "rise_time_s",
+    "dominant_frequency_hz",
+    "max_ascending_slope"
+  ],
+  "parameters": {
+    "objective": "reg:squarederror",
+    "tree_method": "hist",
+    "n_estimators": 1000,
+    "learning_rate": 0.05,
+    "max_depth": 4,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "reg_lambda": 1.0,
+    "random_state": 42,
+    "early_stopping_rounds": 50,
+    "eval_metric": "mae",
+    "n_jobs": 4
+  },
+  "best_iteration": 994,
+  "validation_metrics": {
+    "mae": 7.183216322080236,
+    "rmse": 9.659603966776052,
+    "me": 0.670511604640413,
+    "std_me": 9.63668965435281,
+    "r": 0.40649163756582185
+  }
+}

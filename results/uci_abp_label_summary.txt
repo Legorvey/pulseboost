@@ -1,0 +1,71 @@
+=====================================================================================
+LAPORAN PEMBENTUKAN LABEL TEKANAN DARAH SBP DAN DBP DARI SINYAL ABP (TAHAP 8A)
+Proyek  : Estimasi Tekanan Darah Cuffless & SpO2 dari PPG dengan XGBoost (KTI_XGBoost)
+Dataset : UCI Part_1.mat (Kanal ABP, fs=125 Hz) | 3 Rekaman Pilot (Indeks 0, 1, 2)
+=====================================================================================
+
+[1. PEMERIKSAAN INTEGRITAS SINYAL DASAR ABP SEBELUM DETEKSI]
+  - Record 0: Status=LOLOS | NaN=0, Inf=0, std=20.57 mmHg | Rentang=[50.2, 160.1] mmHg, Mean=94.7 mmHg
+  - Record 1: Status=LOLOS | NaN=0, Inf=0, std=19.68 mmHg | Rentang=[52.4, 138.4] mmHg, Mean=91.8 mmHg
+  - Record 2: Status=LOLOS | NaN=0, Inf=0, std=20.24 mmHg | Rentang=[53.3, 158.7] mmHg, Mean=98.1 mmHg
+
+[2. RINGKASAN KEBERHASILAN PEMBENTUKAN LABEL JENDELA]
+  - Total Jendela Dianalisis      : 45 jendela (30 detik per jendela)
+  - Jendela Berhasil Berlabel SBP : 45 dari 45 jendela (100.0%)
+  - Jendela Berhasil Berlabel DBP : 45 dari 45 jendela (100.0%)
+  - Jumlah Target Bernilai NaN    : SBP = 0, DBP = 0 (0% hilang)
+  - Validitas Fisiologis SBP > DBP: 45 dari 45 jendela (100.0% memenuhi)
+
+[3. STATISTIK DESKRIPTIF LABEL TEKANAN DARAH PILOT (mmHg)]
+  Parameter Target            Min   Median      Max     Mean      Std
+----------------------------------------------------------------------
+  SBP (Sistolik)           114.69   130.56   141.70   131.81     5.69
+  DBP (Diastolik)           58.98    71.68    83.03    73.06     5.53
+  Tekanan Nadi (PP)         54.29    58.05    64.52    58.71     2.57
+  MAP (Tekanan Arteri Rata)    77.55    91.08   101.88    92.64     5.45
+----------------------------------------------------------------------
+
+[4. STATISTIK DUKUNGAN SIKLUS DENYUT PER JENDELA]
+  - Rata-rata Siklus Valid per Jendela : 58.4 siklus denyut
+  - Rentang Siklus Valid per Jendela   : 54 s.d. 62 siklus
+  - Total Siklus Denyut Lengkap Dinilai: 2627 siklus
+  - Rata-rata Variasi Detak (std SBP)  : 2.87 mmHg
+  - Rata-rata Variasi Detak (std DBP)  : 1.95 mmHg
+
+[5. EVALUASI ANOMALI TEKANAN DAN VARIASI FISIOLOGIS]
+  - Pemeriksaan Nilai Ekstrem:
+    * SBP Minimum : 114.69 mmHg (Record 2, Jendela 1) -> Masih dalam rentang normotensif/hipotensi ringan.
+    * SBP Maksimum : 141.70 mmHg (Record 0, Jendela 7) -> Hipertensi Stage 1.
+    * DBP Minimum : 58.98 mmHg (Record 2, Jendela 1) -> Tekanan diastolik rendah namun bentuk gelombang utuh.
+    * DBP Maksimum : 83.03 mmHg (Record 2, Jendela 9) -> Hipertensi diastolik ringan.
+  - Pemeriksaan Transisi / Lonjakan Antar-Jendela:
+    * Pada Record 2, terjadi peningkatan tekanan bertahap dari Jendela 1 (114.7/59.0 mmHg) ke
+      Jendela 5 (138.8/82.3 mmHg). Inspeksi visual memastikan bahwa gelombang ABP tetap bersih,
+      denyut reguler, dan bebas artefak gerakan. Kenaikan ini adalah variasi hemodinamik fisiologis asli.
+    * Tidak ditemukan artefak palsu atau saturasi sensor pada ketiga rekaman pilot.
+
+[6. STATUS PENGGABUNGAN DENGAN 19 FITUR PPG/APG (results/uci_ml_ready_pilot.csv)]
+  - Keberhasilan Pemadanan        : 45 dari 45 jendela berhasil dipadankan (100.0% match)
+  - Dimensi Tabel ML-Ready Aktual : 45 baris x 31 kolom
+  - Tidak ada duplikasi baris ataupun baris yang hilang saat penggabungan (row count preserved).
+  - Penanganan Nilai Kosong (NaN):
+    * Target SBP & DBP : 0 NaN (100.0% terisi)
+    * 15 Fitur PPG Asli: 0 NaN (100.0% terisi)
+    * Fitur APG b/a, c/a: 0 NaN (100.0% terisi)
+    * Fitur APG d/a, e/a: 3 nilai NaN dipertahankan (Record 0, Jendela 0, 3, 4) sesuai kaidah fisiologis.
+
+[7. STRUKTUR DAN KESIAPAN TABEL UNTUK MACHINE LEARNING (XGBOOST)]
+  - Kolom Metadata (Identifikasi & Pemisahan Group K-Fold):
+    * record_id, window_id, start_time_s, end_time_s, processing_valid, quality_warning, num_valid_beats, num_valid_abp_cycles
+  - Kolom Target Regresi:
+    * sbp_mmhg (Target Model 1: Systolic Blood Pressure)
+    * dbp_mmhg (Target Model 2: Diastolic Blood Pressure)
+  - Kolom Fitur Masukan (Tepat 19 Fitur Prediktor, Murni dari Kanal PPG Tunggal):
+    * ibi_median_s, heart_rate_bpm, ibi_cv, rise_time_s, decay_time_s, pulse_width_50_s,
+      pulse_amplitude, pulse_area, max_ascending_slope, min_descending_slope, skewness,
+      kurtosis, dominant_frequency_hz, spectral_power_ratio, spectral_entropy,
+      apg_b_a, apg_c_a, apg_d_a, apg_e_a
+  - Konfirmasi Keamanan Pembelajaran Mesin (Zero Data Leakage):
+    * Sinyal ABP, ECG, kolom target, dan metadata waktu TIDAK dimasukkan ke dalam fitur prediktor X.
+    * Tabel telah 100% SIAP untuk pengujian model XGBoost Regressor pada tahap berikutnya.
+=====================================================================================

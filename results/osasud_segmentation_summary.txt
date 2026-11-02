@@ -1,0 +1,88 @@
+==========================================================================================
+LAPORAN HASIL PILOT SEGMENTASI OSASUD & PEMBENTUKAN LABEL SpO2 (TAHAP 7E)
+Proyek  : Estimasi Tekanan Darah Cuffless & Saturasi Oksigen (SpO2) Menggunakan XGBoost
+Waktu   : 2026-11-02 07:04:32
+Lokasi  : C:\Codes\UNIVERSITY PROJECTS (UNPAD)\Metode Penelitian KTI\KTI_XGBoost\results\osasud_segmentation_summary.txt
+==========================================================================================
+
+[1. RINGKASAN EKSEKUTIF PILOT]
+  - Pasien Pilot Dianalisis   : 4 Pasien (ID 1, 12, 17, 28)
+  - Total Durasi Rekaman      : 111,073 detik (~30.85 jam rekaman)
+  - Parameter Jendela         : 30 detik non-overlapping (2.400 sampel PPG per jendela pada 80 Hz)
+  - Total Jendela Dievaluasi  : 3,701 jendela 30 detik (Sisa detik di luar jendela: 43 detik)
+  - Jendela Layak Model (ML)  : 2,337 jendela (63.15% dari total jendela)
+  - Total Jendela Ditolak     : 1,364 jendela (36.85%)
+
+[2. ANALISIS PENYEBAB KEGAGALAN / PENOLAKAN JENDELA]
+  - Gagal Keduanya Rusak/Lepas: 1,358 jendela (99.6% dari penolakan)
+  - Gagal PPG NaN Saja        : 4 jendela (0.3%)
+  - Gagal SpO2 Kurang Saja    : 2 jendela (0.1%)
+  - Gagal Time Gap            : 0 jendela (0.0% - Seluruh timestamp kontinu 1.0s)
+  - Temuan Kritis Klinis      : 99.6% kegagalan jendela terjadi karena probe oksimeter dilepas/hilang kontak
+                                yang menyebabkan PPG dan SpO2 hilang bersamaan (konkordan).
+
+[3. ANALISIS DATA MENTAH & KUANTISASI SINYAL PPG]
+  Pasien   Detik Total  Detik Valid  Detik NaN    Rentang PPG        Unik (Sample)   Interval 1s 
+  ------------------------------------------------------------------------------------------
+  1        25,178       23,107       2,071        [0.0, 195.0]         101             100.00    %
+  12       30,146       30,145       1            [0.0, 195.0]         100             100.00    %
+  17       28,987       9,970        19,017       [0.0, 195.0]         101             100.00    %
+  28       26,762       7,342        19,420       [0.0, 195.0]         96              100.00    %
+
+  Catatan Kuantisasi PPG:
+  - Seluruh pasien menunjukkan rentang nilai 0.0 s.d. 195.0 dengan langkah nilai genap (misal 0, 2, 4, ...).
+  - Data menunjukkan karakteristik kuantisasi digital ADC 8-bit (Nonin/Philips PSG oximeter).
+  - Sinyal BUKAN clipping permanen karena sinyal berfluktuasi secara dinamis dengan median deviasi standar
+    jendela ~21.5 dan bentuk gelombang pulsatif yang jelas.
+
+[4. DISTRIBUSI TARGET SpO2 & KONSENTRASI NILAI (EFEK PLAFON)]
+  - Jumlah Target Jendela     : 2,337 jendela
+  - Rentang Target SpO2 Valid : 87.0% s.d. 100.0%
+  - Rata-rata (Mean)          : 96.47%
+  - Median                    : 97.0%
+  - Kuartil 1 (Q25)           : 96.0%
+  - Kuartil 3 (Q75)           : 97.0%
+  - Deviasi Standar           : 1.48%
+  - Proporsi SpO2 >= 95%      : 90.37% (Zona Normoksia)
+  - Proporsi SpO2 >= 97%      : 59.22% (Zona Plafon)
+  - Proporsi SpO2 < 90%       : 0.26% (Zona Desaturasi Berat)
+
+  Dampak Penting terhadap Evaluasi Regresi Machine Learning:
+  1. KONSENTRASI PLAFON TINGGI: Mayoritas waktu tidur pasien berada pada rentang normoksia (95-99%).
+  2. POTENSI BIAS EVALUASI: Model regresi sederhana (seperti Mean Squared Error standar) dapat
+     menghasilkan nilai MAE/RMSE yang tampak sangat rendah (< 1.5%) hanya dengan memprediksi nilai rata-rata
+     (~96%), tetapi gagal menangkap dinamika desaturasi hipoksemik pasien sleep apnea.
+  3. REKOMENDASI TAHAP BERIKUTNYA: Pada tahap pelatihan XGBoost, perlu dipertimbangkan pembobotan sampel
+     (sample weighting) atau metrik evaluasi tambahan pada rentang SpO2 < 93% agar performa deteksi
+     desaturasi tidak tertutup oleh dominasi data normoksia.
+
+[5. ANALISIS SENSITIVITAS KRITERIA VALIDITAS SpO2]
+  Pasien   Total Jendela   30/30 (Ketat)    >=24/30 (Utama)    >=15/30 (Longgar) 
+  ---------------------------------------------------------------------------
+  1        839             766              768                770               
+  12       1,004           1,002            1,004              1,004             
+  17       966             323              328                331               
+  28       892             239              241                244               
+  TOTAL    3,701           2,330            2,341              2,349             
+
+  Kesimpulan Analisis Sensitivitas:
+  - Perbedaan antara ambang batas 30/30 (100%), 24/30 (80%), dan 15/30 (50%) sangat kecil (selisih < 0.4%).
+  - Hal ini membuktikan bahwa pelepasan sensor probe pada OSASUD bersifat biner dan berdurasi panjang
+    (sensor terpasang stabil berjam-jam, atau lepas dalam blok waktu yang lama), sehingga ambang 24/30
+    sangat stabil, representatif, dan tidak sensitif terhadap noise fluktuasi sesaat.
+
+[6. TABEL RINCIAN PER PASIEN PILOT]
+  ID     Detik    Jendela  Sisa   Eligible   Eligible%  PPG-only Fail  SpO2-only Fail  Both Fail 
+  ------------------------------------------------------------------------------------------
+  1      25,178   839      8      767        91.4       1              2               69        
+  12     30,146   1,004    26     1,003      99.9       1              0               0         
+  17     28,987   966      7      326        33.7       2              0               638       
+  28     26,762   892      2      241        27.0       0              0               651       
+
+==========================================================================================
+[7. PERNYATAAN INTEGRITAS ILMIAH & BATASAN]
+1. TIDAK ADA IMPUTASI: Nilai SpO2 atau PPG kosong tidak diisi dengan interpolasi/forward-fill/backward-fill.
+2. GROUND TRUTH: SpO2 berasal dari monitor non-invasif oksimeter nadi, bukan SaO2 invasif darah arteri.
+3. PERFUSION INDEX (PI): Hanya disimpan sebagai metadata pendukung kualitas sinyal, tidak dijadikan fitur model.
+4. KESIAPAN: Hasil metadata 3.701 jendela tersimpan di results/osasud_segmentation_pilot.csv.
+==========================================================================================

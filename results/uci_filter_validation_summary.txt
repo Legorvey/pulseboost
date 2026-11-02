@@ -1,0 +1,76 @@
+========================================================================
+LAPORAN VALIDASI FILTER & DETEKSI PUNCAK PPG (TAHAP 4B)
+Berkas: Part_1.mat | Rekaman 1 (Total: 488 s, 61000 sampel)
+Jendela Pengamatan: Detik 60.00 s.d. 70.00 (Durasi: 10.00 s)
+========================================================================
+
+[1. ANALISIS EFEK TEPI FILTERING (EDGE EFFECTS)]
+- Selisih Maksimum Keseluruhan (Max Abs Diff) : 1.0603 a.u.
+- Selisih Rata-rata Keseluruhan (Mean Abs Diff): 0.0767 a.u.
+- 1 Detik Pertama (Detik 60.0 - 61.0): Max Diff = 1.0603 a.u. | Mean Diff = 0.2977 a.u.
+- 1 Detik Terakhir (Detik 69.0 - 70.0): Max Diff = 0.7843 a.u. | Mean Diff = 0.2122 a.u.
+- 8 Detik Tengah  (Detik 61.0 - 69.0): Max Diff = 0.1239 a.u. | Mean Diff = 0.0321 a.u.
+  KESIMPULAN EFEK TEPI:
+  Terjadi distorsi tepi yang sangat nyata pada metode lama akibat filter startup
+  dan stopping transient pada potongan sinyal pendek 10 detik.
+
+[2. RESPON FREKUENSI FILTER CHEBYSHEV TYPE II]
+- Parameter Desain: Orde 4, Stopband Ripple (rs) = 20 dB, Wn = [0.5, 8.0] Hz
+- Frekuensi Kritis Stopband Wn:
+  * Pada 0.5 Hz: Satu Arah = -20.00 dB | Dua Arah (sosfiltfilt) = -40.00 dB
+  * Pada 8.0 Hz: Satu Arah = -20.00 dB | Dua Arah (sosfiltfilt) = -40.00 dB
+- Batas Passband Efektif (-3 dB cutoff):
+  * Respons Satu Arah : 0.625 Hz s.d. 6.450 Hz
+  * Respons Dua Arah  : 0.663 Hz s.d. 6.081 Hz
+  CATATAN TEORITIS:
+  Pada Chebyshev Type II, Wn adalah batas awal stopband, bukan batas passband 3dB.
+  Filtering dua arah (sosfiltfilt) menggandakan atenuasi dalam skala dB,
+  sehingga passband efektif menyempit menjadi ~0.66 s.d. 6.08 Hz.
+
+[3. PERBANDINGAN DETEKSI PUNCAK & LEMBAH (LAMA VS VALIDASI)]
+- Jumlah Puncak Terdeteksi : Lama = 20 | Validasi = 21 (+1 puncak)
+- Jumlah Lembah Terdeteksi : Lama = 19 | Validasi = 20 (+1 lembah)
+- Puncak Baru Ditemukan    : t = 60.032 s (amp = 1.1838 a.u.)
+  (Pada tahap sebelumnya, puncak ini terlewat akibat transient tepi awal)
+- Perubahan Amplitudo Puncak Awal (t=60.528s): Lama = 1.3124 -> Validasi = 1.1987 (selisih: -0.1137)
+- Perubahan Amplitudo Puncak Akhir (t~69.95s): Lama = 0.7065 -> Validasi = 1.1497 (selisih: +0.4432)
+- Rata-rata IBI : Lama = 495.2 ms | Validasi = 496.0 ms
+- Median IBI    : Lama = 496.0 ms | Validasi = 496.0 ms
+- Rata-rata HR  : Lama = 121.20 BPM | Validasi = 120.99 BPM
+- Median HR     : Lama = 120.97 BPM | Validasi = 120.97 BPM
+
+[4. PERGESERAN WAKTU PUNCAK (PEAK TIME SHIFTS)]
+Pemetaan Puncak Lama (P1-P20) terhadap Puncak Baru (P2-P21):
+  Puncak  1: t_lama=60.528s -> t_baru=60.528s (dt= +0.0 ms) | amp: 1.312 -> 1.199 (dv=-0.114)
+  Puncak  2: t_lama=61.024s -> t_baru=61.024s (dt= +0.0 ms) | amp: 1.298 -> 1.193 (dv=-0.105)
+  Puncak  3: t_lama=61.528s -> t_baru=61.528s (dt= +0.0 ms) | amp: 1.072 -> 1.159 (dv=+0.086)
+  Puncak  4: t_lama=62.016s -> t_baru=62.016s (dt= +0.0 ms) | amp: 1.148 -> 1.140 (dv=-0.008)
+  Puncak  5: t_lama=62.520s -> t_baru=62.520s (dt= +0.0 ms) | amp: 1.224 -> 1.181 (dv=-0.043)
+  Puncak  6: t_lama=63.016s -> t_baru=63.016s (dt= +0.0 ms) | amp: 1.151 -> 1.168 (dv=+0.017)
+  Puncak  7: t_lama=63.520s -> t_baru=63.520s (dt= +0.0 ms) | amp: 1.147 -> 1.160 (dv=+0.013)
+  Puncak  8: t_lama=64.008s -> t_baru=64.008s (dt= +0.0 ms) | amp: 1.095 -> 1.085 (dv=-0.010)
+  Puncak  9: t_lama=64.504s -> t_baru=64.504s (dt= +0.0 ms) | amp: 1.182 -> 1.176 (dv=-0.006)
+  Puncak 10: t_lama=65.008s -> t_baru=65.008s (dt= +0.0 ms) | amp: 1.184 -> 1.186 (dv=+0.002)
+  Puncak 11: t_lama=65.512s -> t_baru=65.512s (dt= +0.0 ms) | amp: 1.176 -> 1.188 (dv=+0.012)
+  Puncak 12: t_lama=66.008s -> t_baru=66.008s (dt= +0.0 ms) | amp: 1.173 -> 1.168 (dv=-0.005)
+  Puncak 13: t_lama=66.496s -> t_baru=66.496s (dt= +0.0 ms) | amp: 1.125 -> 1.097 (dv=-0.027)
+  Puncak 14: t_lama=66.992s -> t_baru=66.992s (dt= +0.0 ms) | amp: 1.130 -> 1.160 (dv=+0.030)
+  Puncak 15: t_lama=67.488s -> t_baru=67.488s (dt= +0.0 ms) | amp: 1.100 -> 1.144 (dv=+0.044)
+  Puncak 16: t_lama=67.984s -> t_baru=67.984s (dt= +0.0 ms) | amp: 1.268 -> 1.169 (dv=-0.098)
+  Puncak 17: t_lama=68.472s -> t_baru=68.480s (dt= +8.0 ms) | amp: 1.193 -> 1.137 (dv=-0.055)
+  Puncak 18: t_lama=68.960s -> t_baru=68.960s (dt= +0.0 ms) | amp: 0.986 -> 1.079 (dv=+0.092)
+  Puncak 19: t_lama=69.456s -> t_baru=69.456s (dt= +0.0 ms) | amp: 1.449 -> 1.159 (dv=-0.290)
+  Puncak 20: t_lama=69.936s -> t_baru=69.952s (dt=+16.0 ms) | amp: 0.706 -> 1.150 (dv=+0.443)
+
+[5. EVALUASI DAN KETIDAKPASTIAN]
+1. Efek tepi terbukti memengaruhi hasil Tahap 4 secara signifikan pada kedua ujung sinyal.
+   Puncak pertama pada detik 60.032 terlewat (false negative) pada tahap sebelumnya,
+   dan amplitudo denyut terakhir pada detik 69.94 terdistorsi parah (0.706 vs 1.150 a.u.).
+2. Klaim 'tidak ada false negative' pada tahap sebelumnya terbukti keliru karena
+   keteraturan interval tidak menjamin tidak ada puncak yang terpotong di tepi batas.
+3. Ketidakpastian yang tersisa:
+   - Batas atas passband efektif (6.08 Hz) meredam komponen harmonik tinggi gelombang PPG,
+     sehingga gelombang dicrotic notch terhaluskan secara parsial.
+   - Resolusi sampling 125 Hz (periode 8 ms) membatasi kepastian posisi puncak dalam rentang +/- 8 ms.
+   - Detak jantung tinggi (~121 BPM) menunjukkan kondisi fisiologis takikardia pada pasien rekaman 1.
+========================================================================

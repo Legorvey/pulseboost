@@ -1,0 +1,37 @@
+==========================================================================================
+LAPORAN REKONSILIASI KEGAGALAN REKAMAN DATASET UCI (TAHAP 9A)
+Proyek : Estimasi Tekanan Darah Cuffless & Saturasi Oksigen Menggunakan XGBoost
+Waktu  : 2026-11-02 08:10:55
+Lokasi : C:\Codes\UNIVERSITY PROJECTS (UNPAD)\Metode Penelitian KTI\KTI_XGBoost\results\uci_record_failure_reconciliation.txt
+==========================================================================================
+
+[1. RINGKASAN STATUS PEMROSESAN REKAMAN UCI]
+------------------------------------------------------------------------------------------
+  - Total Rekaman Asli Ditemukan : 12,000 rekaman (3.000 rekaman per Part)
+  - Rekaman Berhasil Diproses    : 9,624 rekaman (80.20%)
+  - Rekaman Gagal / Ditolak      : 2,376 rekaman (19.80%)
+
+[2. TABEL PERINCIAN ALASAN PENOLAKAN PER FILE PART]
+------------------------------------------------------------------------------------------
+Source Part  | SUCCESS (NONE)   | < 1000 samp (8s)   | < 2000 samp (16s)  | < 3000 samp (24s)  | Total
+------------------------------------------------------------------------------------------
+Part_1       |            2,358 |                293 |                209 |                140 | 3,000
+Part_2       |            2,565 |                212 |                133 |                 90 | 3,000
+Part_3       |            2,302 |                319 |                198 |                181 | 3,000
+Part_4       |            2,399 |                302 |                172 |                127 | 3,000
+------------------------------------------------------------------------------------------
+TOTAL ALL    |            9,624 |              1,126 |                712 |                538 | 12,000
+
+[3. KESIMPULAN AUDIT TEKNIS PENYEBAB KEGAGALAN]
+------------------------------------------------------------------------------------------
+  1. Tidak Ditemukan Kerusakan Sinyal (Zero Corrupted Signal):
+     Seluruh 2.376 rekaman yang tidak diproses BUKAN disebabkan oleh artefak, noise ekstrim,
+     nilai NaN/Inf, ataupun kegagalan algoritma pembacaan file.
+  2. Penyebab Tunggal Definitif (TOO_SHORT Durasi Kurang dari 30 Detik):
+     Pada dataset asli UCI, terdapat 2.376 rekaman yang memiliki panjang sinyal hanya
+     1.000 sampel (8.0s), 2.000 sampel (16.0s), atau 3.000 sampel (24.0s).
+     Karena standar segmentasi penelitian mewajibkan jendela utuh 30 detik (3.750 sampel),
+     dan metodologi penelitian menolak imputasi padding sintetis, maka rekaman tersebut
+     secara sah dan benar ditolak dari pembentukan jendela.
+  3. Tidak Ditemukan Bug Sistematis:
+     Tidak ada rekaman yang memiliki durasi >= 30 detik yang tertolak atau gagal diproses.

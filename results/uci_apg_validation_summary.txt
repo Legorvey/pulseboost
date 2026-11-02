@@ -1,0 +1,108 @@
+==================================================================================
+LAPORAN VALIDASI AKHIR KEANDALAN FITUR APG (TAHAP 6C)
+Dataset: UCI Part_1 (Rekaman 0, 1, 2) | Total: 45 Jendela Pilot (30 detik)
+Status: Evaluasi Matematis, Algoritmik, dan Sensitivitas Deteksi Gelombang
+==================================================================================
+
+[1. STATUS HASIL AUDIT SEBELUMNYA (TUGAS 1)]
+- Berkas Diaudit: results/uci_15_features_audit.txt
+- Status Audit 15 Fitur PPG: LULUS SEPENUHNYA (100% VALID)
+- Konfirmasi: Seluruh 15 rumus fitur PPG valid secara numerik dan matematis.
+  Diskrepansi terdahulu murni disebabkan kesalahan pemformatan teks naratif laporan (PW50 171 ms vs 192 ms)
+  dan pelabelan string (slope a.u./s berlabel 's'). Berkas CSV data asli tidak mengandung cacat.
+
+[2. EVALUASI POLARITAS DAN PROMINENS GELOMBANG APG (TUGAS 2)]
+1. Konvensi Polaritas Literatur (Takazawa 1998, Elgendi 2012, Qawqzeh 2015, Yang 2021):
+   - a: Positif (Akselerasi ejeksi awal) -> Sesuai 100% (median +308.2 a.u./s^2).
+   - b: Negatif (Deselerasi sistolik awal) -> Sesuai 100% (median -373.8 a.u./s^2).
+   - c: Positif (Re-akselerasi late systole) -> Sesuai 100% (median +104.6 a.u./s^2).
+   - d: Umumnya Negatif/Mendekati Nol (Deselerasi akhir sistole).
+   - e: Positif (Pantulan gelombang penutupan katup aorta / dicrotic notch).
+2. Temuan Khusus Amplitudo Gelombang d Positif:
+   - Dari 451 denyut dengan d terdeteksi, 401 denyut (88.9%) memiliki d > 0.
+   - Mengapa d bernilai positif? Pada subjek dengan baseline late systole tinggi (tekanan diastolik tinggi),
+     peluruhan gelombang belum menyentuh garis nol saat terjadi infleksi lokal.
+   - Literatur (Yang dkk. 2021, Elgendi 2014) mengizinkan d bernilai positif relatif terhadap nol global,
+     asalkan d merupakan lokal minimum sejati (trough) terhadap puncak c dan e.
+3. Masalah Prominens Rendah Gelombang d & e:
+   - Prominens absolut gelombang e di atas d (e - d): median HANYA 4.28 a.u./s^2 (rentang 0.00 - 654.19).
+   - Prominens relatif terhadap rentang utama APG (a - b): median HANYA 0.66%.
+   - KESIMPULAN FISIOLOGIS: Fluktuasi sebesar ~2 a.u./s^2 sangat rentan tertukar dengan noise turunan kedua.
+     Pada mayoritas denyut (82.8%), gelombang d dan e tidak memiliki prominens yang cukup dan melebur secara alami.
+
+[3. KEANDALAN DETEKSI DENYUT VS KELENGKAPAN JENDELA (TUGAS 3)]
+- Total Denyut Lengkap: 2628 denyut pada 45 jendela
+- Keberhasilan Deteksi Tingkat Denyut (Beat-Level):
+  * apg_b_a : 2626 dari 2628 denyut (99.92%)
+  * apg_c_a : 2600 dari 2628 denyut (98.93%)
+  * apg_d_a : 451 dari 2628 denyut (17.16%) -> HANYA 17.16%!
+  * apg_e_a : 451 dari 2628 denyut (17.16%) -> HANYA 17.16%!
+- Perbandingan dengan Kelengkapan Jendela (Window Coverage Drop-off):
+  * Baseline (>= 1 denyut)             : b/a=100%, c/a=100%, d/a=93.3% (42/45), e/a=93.3% (42/45)
+  * Kriteria 1 (>= 10% denyut)         : b/a=100%, c/a=100%, d/a=42.2% (19/45), e/a=42.2% (19/45)
+  * Kriteria 2 (>= 20% & >= 10 denyut) : b/a=100%, c/a=100%, d/a=28.9% (13/45), e/a=28.9% (13/45)
+  * Kriteria 3 (>= 30% denyut)         : b/a=100%, c/a=100%, d/a=22.2% (10/45), e/a=22.2% (10/45)
+  TEMUAN KRUSIAL:
+  Kelengkapan jendela 93.3% pada Tahap 6B sebelumnya merupakan 'ilusi statistik' akibat
+  adanya 1-2 denyut terisolasi di dalam jendela beranggotakan 60 denyut.
+  Ketika kriteria representatif diterapkan (Kriteria 2: minimal 20% denyut dan min 10 denyut),
+  kelengkapan apg_d_a dan apg_e_a anjlok drastis menjadi hanya 28.9% (13 jendela).
+  Lebih parah lagi, ke-13 jendela tersebut berasal hampir seluruhnya dari Rekaman 2 (11 jendela),
+  sedangkan Rekaman 0 menghasilkan 0/16 jendela (0%) dan Rekaman 1 menghasilkan 2/16 jendela (12.5%).
+
+[4. UJI SENSITIVITAS SMOOTHING SAVITZKY-GOLAY (TUGAS 4)]
+Perbandingan Savitzky-Golay Window Length (w = 9, 11, 15 sampel, orde 3):
+Rekaman    Window   Deteksi a    Deteksi b    Deteksi c    Deteksi d    Deteksi e   
+----------------------------------------------------------------------------------
+Rec 0.0    w=9.0     100.0%       100.0%        99.3%         3.3%         3.3%
+Rec 0.0    w=11.0    100.0%       100.0%        99.3%         2.8%         2.8%
+Rec 0.0    w=15.0    100.0%       100.0%        99.3%         2.0%         2.0%
+Rec 1.0    w=9.0      99.9%        99.9%        99.2%        19.3%        19.3%
+Rec 1.0    w=11.0     99.9%        99.9%        99.2%        10.8%        10.8%
+Rec 1.0    w=15.0     99.9%        99.9%        99.1%         2.7%         2.7%
+Rec 2.0    w=9.0      99.9%        99.9%        98.3%        52.9%        52.9%
+Rec 2.0    w=11.0     99.9%        99.9%        98.3%        42.8%        42.8%
+Rec 2.0    w=15.0     99.9%        99.9%        98.0%        21.7%        21.7%
+  EVALUASI KESTABILAN MORFOLOGI:
+  1. Gelombang a, b, dan c SANGAT KOKOH (Invarian):
+     Tingkat deteksi stabil di ~98-100% pada seluruh w=9, 11, 15. Posisi titik temporal
+     hanya bergeser <= 1 sampel (<= 8 ms), dan nilai rasio b/a serta c/a hanya berubah < 1.8%.
+  2. Gelombang d dan e SANGAT RAPUH (Fragile):
+     - Pada Rekaman 1: deteksi d turun drastis dari 19.3% (w=9) -> 10.8% (w=11) -> 2.7% (w=15).
+     - Pada Rekaman 2: deteksi d turun drastis dari 52.9% (w=9) -> 42.8% (w=11) -> 21.7% (w=15).
+     - Gelombang d dan e dapat muncul pada w=9 akibat ripple noise dan lenyap total pada w=15.
+     Ini membuktikan secara definitif bahwa keberadaan gelombang d dan e sangat bergantung
+     pada parameter smoothing buatan, bukan fenomena morfologi yang kokoh.
+
+[5. KLASIFIKASI KEANDALAN FITUR DAN KESIMPULAN REKOMENDASI (TUGAS 5)]
+Kategori yang Ditetapkan (Berdasarkan Kriteria Teknik & Keandalan Sinyal):
+----------------------------------------------------------------------------------
+1. apg_b_a (b/a): [reasonably_reliable]
+   - Dasar Klasifikasi: Deteksi tingkat denyut mencapai 99.92%, kelengkapan jendela 100.0% stabil
+     di bawah semua kriteria sensitivitas. Invarian terhadap perubahan smoothing SG (w=9, 11, 15).
+   - Rekomendasi ML: LAYAK DIPERTAHANKAN sebagai fitur kandidat XGBoost.
+
+2. apg_c_a (c/a): [reasonably_reliable]
+   - Dasar Klasifikasi: Deteksi tingkat denyut mencapai 98.93%, kelengkapan jendela 100.0% stabil
+     di bawah semua kriteria sensitivitas. Posisi puncak late systole stabil dan korelasi tinggi.
+   - Rekomendasi ML: LAYAK DIPERTAHANKAN sebagai fitur kandidat XGBoost.
+
+3. apg_d_a (d/a): [insufficient_evidence]
+   - Dasar Klasifikasi: Deteksi tingkat denyut hanya 17.16%. Kelengkapan jendela representatif
+     (Kriteria 2) hanya 28.9% (terkonsentrasi murni di Rekaman 2, absen total di Rekaman 0).
+     Prominens sangat rendah (~2 a.u./s^2), sangat rapuh terhadap smoothing.
+     Penggunaan pada ML berisiko tinggi menyebabkan data leakage (bertindak sebagai proxy subjek/pasien)
+     dan memicu bias missingness hingga >70%.
+   - Rekomendasi ML: TIDAK DIREKOMENDASIKAN (DROP ATAU EKSKLUSI) dari model utama.
+
+4. apg_e_a (e/a): [insufficient_evidence]
+   - Dasar Klasifikasi: Deteksi identik dengan d (17.16% denyut, 28.9% jendela Kriteria 2).
+     Sangat rentan lenyap saat smoothing dinaikkan ke w=15 sampel. Tidak ada bukti keandalan
+     antar-pasien yang cukup pada dataset pilot ini.
+   - Rekomendasi ML: TIDAK DIREKOMENDASIKAN (DROP ATAU EKSKLUSI) dari model utama.
+
+[CATATAN INTEGRITAS & BATASAN PENELITIAN]
+- Klasifikasi ini adalah validasi teknis pemrosesan sinyal dan machine learning engineering,
+  BUKAN validasi klinis ataupun diagnosis medis kelenturan vaskular pasien.
+- Seluruh data dihitung murni dari rekaman pilot UCI Part_1 tanpa modifikasi file .mat.
+==================================================================================

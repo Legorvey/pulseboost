@@ -1,0 +1,93 @@
+==========================================================================================
+LAPORAN RINGKASAN EKSTRAKSI FITUR FINAL OSASUD 30 PASIEN (TAHAP 7H)
+Proyek : Estimasi Tekanan Darah Cuffless & Saturasi Oksigen (SpO2) Menggunakan XGBoost
+Waktu  : 2026-11-02 07:41:39
+Lokasi : C:\Codes\UNIVERSITY PROJECTS (UNPAD)\Metode Penelitian KTI\KTI_XGBoost\results\osasud_full_feature_extraction_summary.txt
+==========================================================================================
+
+[1. RINGKASAN DATASET & SEGMENTASI 30 PASIEN]
+------------------------------------------------------------------------------------------
+  - Total Pasien Berhasil Diproses : 30 dari 30 pasien
+  - Total Jendela 30 Detik         : 32,032 jendela
+  - Total Jendela Memenuhi Syarat  : 27,455 jendela (85.71%)
+  - Waktu Eksekusi Total           : 200.57 detik (3.34 menit)
+  - Penggunaan Memori RAM Puncak   : 134.0 MB (Sangat aman, di bawah batas sistem)
+
+[2. DISTRIBUSI TARGET REGRESI SpO2 PADA JENDELA ELIGIBLE]
+------------------------------------------------------------------------------------------
+  - Rentang Nilai Target (Min - Max) : 64.0% - 100.0%
+  - Rata-rata +/- Standar Deviasi    : 95.52% +/- 2.75%
+  - Kuartil (Q1 - Median - Q3)       : 94.0% - 96.0% - 97.0%
+  - Sebaran Rentang Klinis Hipoksemia:
+    * Normal (SpO2 >= 95%)           : 19,280 jendela (70.2%)
+    * Mild Desaturasi (90% <= SpO2 < 95%) : 7,310 jendela (26.6%)
+    * Moderate Desaturasi (85% <= SpO2 < 90%): 819 jendela (3.0%)
+    * Severe Desaturasi (SpO2 < 85%) : 46 jendela (0.2%)
+
+[3. KELENGKAPAN & TINGKAT MISSINGNESS 19 KANDIDAT FITUR]
+------------------------------------------------------------------------------------------
+Nama Fitur                | Valid Jendela   | Kelengkapan (%)    | Missing (%)    
+------------------------------------------------------------------------------------------
+ibi_median_s              |        27,455 |           100.00% |          0.00%
+heart_rate_bpm            |        27,455 |           100.00% |          0.00%
+ibi_cv                    |        27,455 |           100.00% |          0.00%
+rise_time_s               |        27,455 |           100.00% |          0.00%
+decay_time_s              |        27,455 |           100.00% |          0.00%
+pulse_width_50_s          |        27,455 |           100.00% |          0.00%
+pulse_amplitude           |        27,455 |           100.00% |          0.00%
+pulse_area                |        27,455 |           100.00% |          0.00%
+max_ascending_slope       |        27,455 |           100.00% |          0.00%
+min_descending_slope      |        27,455 |           100.00% |          0.00%
+skewness                  |        27,455 |           100.00% |          0.00%
+kurtosis                  |        27,455 |           100.00% |          0.00%
+dominant_frequency_hz     |        27,455 |           100.00% |          0.00%
+spectral_power_ratio      |        27,455 |           100.00% |          0.00%
+spectral_entropy          |        27,455 |           100.00% |          0.00%
+apg_b_a                   |        27,455 |           100.00% |          0.00%
+apg_c_a                   |        27,455 |           100.00% |          0.00%
+apg_d_a                   |        27,455 |           100.00% |          0.00%
+apg_e_a                   |        27,455 |           100.00% |          0.00%
+------------------------------------------------------------------------------------------
+Catatan: 15 Fitur PPG Primer memiliki kelengkapan 100%. Rasio APG diekstraksi secara jujur
+dan menyajikan nilai NaN pada morfologi yang tidak meyakinkan tanpa pemaksaan angka.
+
+[4. SEBARAN QUALITY WARNING PADA JENDELA ELIGIBLE]
+------------------------------------------------------------------------------------------
+  - NONE                                : 20,945 jendela ( 76.3%)
+  - UNRELIABLE_IBI_INTERVALS            :  6,510 jendela ( 23.7%)
+
+[5. RINCIAN PER PASIEN (30 PASIEN)]
+------------------------------------------------------------------------------------------
+PID   | Total Jendela   | Eligible     | Ekstraksi    | Durasi (s)   | RAM (MB)  
+------------------------------------------------------------------------------------------
+1     |           839 |        767 |        767 |       5.48 |    129.3
+2     |         1,429 |      1,340 |      1,340 |      11.33 |    132.1
+3     |           856 |        852 |        852 |       7.11 |    132.0
+4     |         1,082 |      1,078 |      1,078 |       6.74 |    133.2
+5     |         1,091 |      1,047 |      1,047 |       7.26 |    132.5
+6     |           487 |        469 |        469 |       3.02 |    132.2
+7     |         1,104 |        970 |        970 |       6.46 |    131.4
+8     |         1,079 |        943 |        943 |       6.06 |    130.9
+9     |         1,138 |        982 |        982 |       8.73 |    133.2
+10    |         1,368 |      1,116 |      1,116 |       6.62 |    132.7
+11    |         1,013 |        779 |        779 |       4.46 |    132.2
+12    |         1,004 |      1,003 |      1,003 |       6.43 |    133.2
+13    |         1,134 |      1,108 |      1,108 |       9.79 |    132.3
+14    |         1,230 |      1,196 |      1,196 |       7.86 |    133.2
+15    |         1,103 |        889 |        889 |       6.59 |    133.3
+16    |         1,078 |        931 |        931 |       5.37 |    132.5
+17    |           966 |        326 |        326 |       1.92 |    133.4
+18    |         1,195 |        746 |        746 |       5.99 |    132.7
+19    |         1,138 |        942 |        942 |       6.76 |    132.8
+20    |         1,174 |      1,125 |      1,125 |       7.18 |    133.8
+21    |         1,171 |      1,169 |      1,169 |      10.24 |    134.0
+22    |           965 |        737 |        737 |       3.92 |    132.8
+23    |         1,136 |      1,124 |      1,124 |       8.61 |    131.3
+24    |         1,181 |      1,021 |      1,021 |       6.50 |    132.0
+25    |         1,267 |      1,024 |      1,024 |       7.07 |    133.7
+26    |         1,079 |        939 |        939 |       7.43 |    131.1
+27    |           917 |        776 |        776 |       4.98 |    132.7
+28    |           892 |        241 |        241 |       1.52 |    132.1
+29    |           937 |        843 |        843 |       7.35 |    131.2
+30    |           979 |        972 |        972 |      10.96 |    131.2
+------------------------------------------------------------------------------------------

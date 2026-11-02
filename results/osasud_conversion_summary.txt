@@ -1,0 +1,65 @@
+================================================================================
+LAPORAN RINGKASAN KONVERSI DATASET OSASUD KE NPZ PER PASIEN
+Proyek  : Estimasi Tekanan Darah Cuffless & Saturasi Oksigen (SpO2) Menggunakan XGBoost
+Waktu   : 2026-11-01 23:46:02
+================================================================================
+
+[1. INFORMASI SUMBER & LINGKUNGAN]
+  - Berkas Sumber         : /kaggle/input/datasets/legorvey/osasud-metlin/dataset_OSAS.pickle
+  - Ukuran Berkas Sumber  : 3.05 GiB
+  - Lingkungan Komputasi  : Kaggle Notebook CPU
+  - Total RAM Sistem      : 31.35 GiB
+
+[2. HASIL AGREGAT KONVERSI]
+  - Total Pasien Selesai  : 30
+  - Total Durasi Waktu    : 961,357 detik (~267.04 jam rekaman)
+  - Total Ukuran NPZ      : 44.54 MB (0.043 GiB)
+  - Format Berkas         : NumPy NPZ Terkompresi (.npz)
+  - Presisi Sinyal Pleth  : float64 murni (80 sampel per detik, 80 Hz)
+  - Target Kalibrasi      : SpO2 (%) pada 1 Hz (float64)
+  - Metadata Pendukung    : PI (%) pada 1 Hz (float64)
+  - Timestamp             : ISO 8601 string (<U32) dan Unix nanoseconds (int64)
+
+[3. KEPATUHAN PROTOKOL & ATURAN]
+  - Downsampling          : TIDAK DILAKUKAN (Frekuensi 80 Hz asli)
+  - Filtering / Bandpass  : TIDAK DILAKUKAN (Sinyal mentah asli)
+  - Normalisasi Sinyal    : TIDAK DILAKUKAN
+  - Imputasi Buatan       : TIDAK DILAKUKAN (Cacat/kosong ditandai NaN eksplisit)
+  - Segmentasi Jendela 30s: TIDAK DILAKUKAN (Dijalankan pada tahap ekstraksi fitur)
+  - Pelatihan Model       : TIDAK ADA (Hanya konversi dataset)
+  - Penggunaan Fitur Lain : ECG, Apnea Label, dan PI TIDAK DIGUNAKAN sebagai fitur model
+
+[4. HASIL VERIFIKASI]
+  - Status allow_pickle   : LOLOS 100% (allow_pickle=False valid untuk semua berkas)
+  - Objek / Pickle Type   : NIHIL (100% numerik murni & string fixed-width)
+  - Integritas Dimensi    : 100% VALID
+  - Anomali Sinyal PPG    : 0 pasien memiliki anomali/celah sinyal
+
+[5. TABEL RINGKASAN PASIEN (SAMPLE 15 PASIEN PERTAMA)]
+  Pasien ID       Nama Berkas               Detik      Ukuran (KB)  SpO2 NaN   Anomali   
+  ----------------------------------------------------------------------------------
+  1               patient_1.npz             25178      1226.8       2097       0         
+  10              patient_10.npz            41058      1743.3       7303       0         
+  11              patient_11.npz            30400      1345.9       6715       0         
+  12              patient_12.npz            30146      1643.7       2          0         
+  13              patient_13.npz            34036      1859.6       651        0         
+  14              patient_14.npz            36920      1984.7       959        0         
+  15              patient_15.npz            33105      1630.7       6308       0         
+  16              patient_16.npz            32360      1651.1       3861       0         
+  17              patient_17.npz            28987      740.4        19053      0         
+  18              patient_18.npz            35875      1359.0       13385      0         
+  2               patient_2.npz             42877      2228.4       2606       0         
+  19              patient_19.npz            34151      1481.7       5750       0         
+  20              patient_20.npz            35233      1703.3       1372       0         
+  21              patient_21.npz            35150      1729.7       48         0         
+  22              patient_22.npz            28952      1271.6       6490       0         
+  ... dan 15 pasien lainnya tercatat lengkap di osasud_manifest.json.
+
+================================================================================
+PETUNJUK PENGGUNAAN HASIL DI KOMPUTER LOKAL:
+1. Unduh berkas ZIP 'osasud_patients_npz.zip' dari panel kanan (Data -> Output).
+2. Ekstrak seluruh berkas .npz ke dalam: data/osasud/patients_npz/
+3. Letakkan berkas manifes 'osasud_manifest.json' di: data/osasud/
+4. Salin 'osasud_conversion_summary.txt' ke folder: results/
+5. Ekstraksi fitur per pasien kini dapat dijalankan secara lokal dengan RAM minimal (<100 MB).
+================================================================================

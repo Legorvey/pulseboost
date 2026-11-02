@@ -1,0 +1,90 @@
+================================================================================
+LAPORAN LENGKAP PELATIHAN AWAL TIGA MODEL XGBOOST & EVALUASI VALIDASI
+Proyek: KTI_XGBoost - Estimasi Tekanan Darah Cuffless & Saturasi Oksigen
+Status: MODEL AWAL / PROVISIONAL VALIDATION (Data TEST Tidak Digunakan)
+Versi XGBoost: 3.4.1
+================================================================================
+
+1. RINGKASAN METODOLOGI DAN INTEGRITAS DATA
+--------------------------------------------------------------------------------
+1. Tiga model XGBoost Regressor terpisah dilatih secara independen:
+   - Model 1: Estimasi SBP dari fitur PPG/APG UCI (Kaggle/PhysioNet).
+   - Model 2: Estimasi DBP dari fitur PPG/APG UCI (Kaggle/PhysioNet).
+   - Model 3: Estimasi SpO2 dari fitur PPG/APG OSASUD (80 Hz).
+2. Data Split yang Dikunci pada Tahap 9A digunakan secara ketat:
+   - UCI    : Train = 58.396 jendela (58.338 label valid) | Val = 12.513 jendela (12.508 label valid)
+   - OSASUD : Train = 18.890 jendela (21 pasien)          | Val = 3.859 jendela (4 pasien: ID 19, 21, 27, 30)
+   - Set TEST (12.514 jendela UCI & 4.706 jendela OSASUD) DISEGEL MURNI dan TIDAK DISENTUH.
+3. Penanganan Missing Values:
+   - Baris dengan target NaN dikeluarkan HANYA dari fitting dan evaluasi target terkait.
+   - Nilai NaN pada fitur (misal apg_c_a, apg_d_a, apg_e_a) DIPERTAHANKAN dan ditangani
+     secara native oleh XGBoost melalui default direction pada setiap tree split.
+4. Definisi Signed Error Konsisten:
+   - Error = Prediksi - Referensi (ME = mean(error), STD(ME) dengan ddof=1).
+
+2. PERBANDINGAN PERFORMA VALIDASI: BASELINE vs XGBOOST
+--------------------------------------------------------------------------------
+Target | Model / Konfigurasi          | k   | MAE      | RMSE     | ME       | STD(ME)  | R     
+--------------------------------------------------------------------------------
+SBP    | Baseline (Mean TRAIN)        | -   | 17.987   | 21.942   | +1.728   | 21.875   | 0.0000
+SBP    | Baseline (Median TRAIN)      | -   | 17.834   | 21.874   | -0.045   | 21.875   | 0.0000
+SBP    | XGBoost Config A (15 PPG + b/a) (990 it) | 16  | 13.837   | 17.901   | +1.475   | 17.841   | 0.5793
+SBP    | XGBoost Config B (15 PPG + b/a, c/a) (999 it) | 17  | 13.602   | 17.663   | +1.472   | 17.602   | 0.5944
+SBP    | XGBoost Config C (All 19 Features) (999 it) | 19  | 13.220   | 17.218   | +1.298   | 17.169   | 0.6208
+SBP    | XGBoost Config D (CFS Selected) (997 it) | 4   | 15.098   | 19.303   | +1.504   | 19.245   | 0.4758
+DBP    | Baseline (Mean TRAIN)        | -   | 8.327    | 10.557   | +0.914   | 10.517   | 0.0000
+DBP    | Baseline (Median TRAIN)      | -   | 7.960    | 10.591   | -1.248   | 10.517   | 0.0000
+DBP    | XGBoost Config A (15 PPG + b/a) (993 it) | 16  | 6.847    | 9.346    | +0.568   | 9.329    | 0.4650
+DBP    | XGBoost Config B (15 PPG + b/a, c/a) (999 it) | 17  | 6.805    | 9.301    | +0.567   | 9.284    | 0.4735
+DBP    | XGBoost Config C (All 19 Features) (996 it) | 19  | 6.567    | 9.067    | +0.500   | 9.054    | 0.5101
+DBP    | XGBoost Config D (CFS Selected) (994 it) | 6   | 7.183    | 9.660    | +0.671   | 9.637    | 0.4065
+SPO2   | Baseline (Mean TRAIN)        | -   | 2.449    | 2.853    | -1.805   | 2.210    | 0.0000
+SPO2   | Baseline (Median TRAIN)      | -   | 2.039    | 2.437    | -1.028   | 2.210    | 0.0000
+SPO2   | XGBoost Config A (15 PPG + b/a) (63 it) | 16  | 2.200    | 2.616    | -1.605   | 2.066    | 0.3834
+SPO2   | XGBoost Config B (15 PPG + b/a, c/a) (47 it) | 17  | 2.173    | 2.564    | -1.622   | 1.986    | 0.4452
+SPO2   | XGBoost Config C (All 19 Features) (68 it) | 19  | 2.132    | 2.555    | -1.551   | 2.030    | 0.4354
+SPO2   | XGBoost Config D (CFS Selected) (284 it) | 2   | 1.691    | 2.074    | -0.824   | 1.904    | 0.5079
+--------------------------------------------------------------------------------
+
+3. ANALISIS PER TARGET & INSIGHT MODELING
+--------------------------------------------------------------------------------
+A. TARGET SBP (Systolic Blood Pressure - UCI):
+   - Baseline Mean TRAIN (130.28 mmHg)   : Val MAE = 17.987 mmHg
+   - Model Terbaik: XGBoost Config C (All 19 Features) (Iterasi 999.0)
+     Val MAE = 13.220 mmHg, RMSE = 17.218 mmHg, ME = +1.298 mmHg, R = 0.6208
+   - Analisis Per-Record Validation: Mean MAE = 13.58 mmHg, Median = 10.39 mmHg
+   - Catatan Metodologis UCI: Karena partisi berbasis record_id (bukan patient-independent terverifikasi
+     secara biometrik murni), hasil ini adalah evaluasi record-level validasi dan TIDAK boleh diklaim
+     memenuhi standar klinis AAMI / BHS pada tahap awal ini.
+
+B. TARGET DBP (Diastolic Blood Pressure - UCI):
+   - Baseline Mean TRAIN (66.87 mmHg)    : Val MAE = 8.327 mmHg
+   - Model Terbaik: XGBoost Config C (All 19 Features) (Iterasi 996.0)
+     Val MAE = 6.567 mmHg, RMSE = 9.067 mmHg, ME = +0.500 mmHg, R = 0.5101
+   - Analisis Per-Record Validation: Mean MAE = 7.02 mmHg, Median = 5.43 mmHg
+
+C. TARGET SpO2 (Saturasi Oksigen - OSASUD):
+   - Baseline Mean TRAIN (95.22%)        : Val MAE = 2.449%
+   - Model Terbaik: XGBoost Config D (CFS Selected) (Iterasi 284.0)
+     Val MAE = 1.691%, RMSE = 2.074%, ME = -0.824%, R = 0.5079
+   - Evaluasi Subgrup Desaturasi:
+     * Kelompok <90%  (18 jendela)  : MAE = 7.759% (Keterbatasan: Sampel sangat kecil / event langka)
+     * Kelompok 90-95% (520 jendela): MAE = 2.175%
+     * Kelompok >=95% (3321 jendela): MAE = 1.583%
+   - Evaluasi Per Pasien Validation (Patient-Wise Unseen Subjects):
+     * Pasien 19 (942 jendela): MAE = 1.638%
+     * Pasien 21 (1169 jendela): MAE = 1.733%
+     * Pasien 27 (776 jendela): MAE = 1.714%
+     * Pasien 30 (972 jendela): MAE = 1.675%
+     * Rata-rata MAE per Pasien (Unweighted): 1.690%
+   - Catatan Klinis: Model SpO2 berbasis fotopletismografi ini merupakan eksplorasi penelitian
+     akademis dan TIDAK boleh diklaim sebagai pengganti oksimeter denyut klinis bersertifikasi medis.
+
+4. KESIMPULAN GERBANG VALIDASI
+--------------------------------------------------------------------------------
+1. Seluruh target (SBP, DBP, SpO2) berhasil dilatih dan dievaluasi.
+2. XGBoost secara konsisten mengungguli baseline konstan mean dan median pada seluruh target.
+3. Seluruh model dan metadatanya telah tersimpan dalam format JSON standar di folder models/.
+4. Data set TEST tetap murni 100% belum tersentuh.
+5. Eksperimen ini siap dilanjutkan ke tahap analisis mendalam dan pelaporan naskah KTI.
+================================================================================

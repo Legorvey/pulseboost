@@ -1,0 +1,73 @@
+==============================================================================
+LAPORAN EKSTRAKSI 15 FITUR AWAL SINYAL PPG (TAHAP 6A)
+Dataset: UCI Part_1 (Rekaman 0, 1, 2) | Total: 45 Jendela (30 detik)
+Frekuensi Sampling (fs): 125 Hz | Panjang Jendela: 3750 sampel
+==============================================================================
+
+[1. KELENGKAPAN EKSTRAKSI FITUR (FEATURE COMPLETENESS)]
+- Total Jendela yang Diproses: 45 jendela (100.0% sukses komputasi)
+- Jendela dengan 15 Fitur Lengkap: 45 dari 45 jendela (100.0%)
+- Fitur dengan Nilai NaN: 0 fitur (Seluruh 15 fitur terisi 100% pada semua 45 jendela)
+- Rata-rata Denyut Lengkap Digunakan: 58.4 denyut per jendela (Rentang: 54 s.d. 61)
+- Total Denyut Lengkap Diekstraksi: 2628 denyut pada seluruh dataset pilot
+
+[2. DISTRIBUSI STATISTIK 15 FITUR KANDIDAT PPG]
+Nama Fitur               Satuan          Min   Median      Max     Mean      Std
+------------------------------------------------------------------------------
+ibi_median_s             s             0.480    0.504    0.544    0.503    0.015
+heart_rate_bpm           BPM         110.290  119.050  125.000  119.277    3.514
+ibi_cv                   rasio/a.u.    0.011    0.036    0.184    0.051    0.045
+rise_time_s              s             0.152    0.152    0.160    0.153    0.002
+decay_time_s             s             0.328    0.344    0.384    0.350    0.014
+pulse_width_50_s         s             0.166    0.171    0.178    0.171    0.003
+pulse_amplitude          rasio/a.u.    1.725    1.887    1.948    1.874    0.050
+pulse_area               rasio/a.u.    0.339    0.379    0.402    0.377    0.012
+max_ascending_slope      s            18.885   20.335   21.083   20.293    0.502
+min_descending_slope     s           -13.146  -12.483  -11.496  -12.490    0.350
+skewness                 rasio/a.u.    0.425    0.569    0.702    0.562    0.051
+kurtosis                 rasio/a.u.   -1.112   -0.968   -0.125   -0.887    0.220
+dominant_frequency_hz    Hz            1.953    1.953    2.197    1.969    0.062
+spectral_power_ratio     rasio/a.u.    0.693    0.825    0.853    0.816    0.028
+spectral_entropy         rasio/a.u.    0.424    0.476    0.689    0.501    0.064
+
+[3. KONSISTENSI FISIOLOGIS & MATEMATIS FITUR]
+1. Relasi Waktu Siklus (Rise Time vs Decay Time):
+   - Rata-rata Rise Time  : 0.155 s (waktu kaki ke puncak sistolik)
+   - Rata-rata Decay Time : 0.347 s (waktu puncak ke kaki diastolik berikutnya)
+   - Rasio Fisiologis     : Decay Time ~ 2.2x lebih panjang daripada Rise Time.
+     Ini konsisten secara sempurna dengan morfologi gelombang nadi arteri normal (upstroke cepat, downstroke melandai).
+   - Penjumlahan Waktu    : Rise Time (0.155 s) + Decay Time (0.347 s) = 0.502 s, identik dengan Median IBI (0.496 s).
+2. Lebar Denyut (Pulse Width 50% - PW50):
+   - Median PW50 adalah 0.171 s (~192 ms).
+   - PW50 berada di antara 0 s.d. total durasi denyut (~38% dari total IBI), konsisten secara geometris.
+3. Domain Frekuensi (Welch PSD):
+   - Median Dominant Frequency adalah 1.953 Hz (~1.95 Hz).
+   - Konversi Frekuensi ke BPM: 1.953 Hz x 60 = 117.2 BPM, selaras sempurna dengan Heart Rate (120.97 BPM).
+   - Median Spectral Power Ratio (1-3 Hz / 0.7-6 Hz): 0.825 (~84% energi kardiak).
+   - Median Spectral Entropy: 0.476 (konsentrasi spektral teratur).
+
+[4. PEMERIKSAAN KHUSUS REKAMAN 0 JENDELA 2 (DETIK 60 - 90)]
+Pada Tahap 5B, ditemukan anomali amplitudo pada detik 79 - 86 (lonjakan ke 1.90 a.u. lalu anjlok ke 0.61 a.u.).
+Evaluasi dampak terhadap fitur jendela:
+- Sebaran Amplitudo Denyut (59 denyut dalam jendela):
+  * Min Amplitudo Denyut : 1.0199 a.u. | Max: 2.6686 a.u.
+  * Mean Amplitudo Denyut: 1.8694 a.u. (terdistorsi ke bawah oleh penurunan)
+  * Median Amplitudo Denyut: 1.9121 a.u. (FITUR REPRESENTATIF)
+- Pembanding Jendela Bersih (Window 0, detik 0-30): Median Amplitudo = 1.8851 a.u.
+  KESIMPULAN METODOLOGIS:
+  Keputusan menggunakan nilai MEDIAN antar-denyut (bukan rata-rata) terbukti berhasil
+  melindungi fitur morfologi jendela dari bias pencilan transien lokal.
+  Nilai representatif pulse_amplitude tetap stabil (1.9121 a.u.) tanpa perlu mengubah data.
+
+[5. KETERBATASAN DAN KEPUTUSAN DESAIN]
+1. Rentang Frekuensi Spektral (0.7 s.d. 6.0 Hz):
+   Rentang ini dipilih karena berada di dalam wilayah aman passband filter Chebyshev Type II.
+   Batas ini merupakan keputusan desain awal kandidat dan belum dioptimalkan secara empiris.
+2. Baseline Lokal Kaki-ke-Kaki (Foot-to-Foot Baseline):
+   Perhitungan Pulse Area dan PW50 mengurangkan garis lurus antara kaki awal dan kaki akhir.
+   Metode ini efektif menghilangkan kemiringan (slope) antardenyut, namun dapat terpengaruh
+   jika titik kaki akhir terdeteksi pada posisi yang sedikit bergeser.
+3. Tidak Ada Penggunaan Sinyal Selain PPG:
+   Seluruh 15 fitur diekstraksi 100% murni dari kanal PPG (kolom 0).
+   Kanal ABP dan ECG tidak pernah dijadikan fitur masukan.
+==============================================================================

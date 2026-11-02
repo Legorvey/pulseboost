@@ -1,0 +1,68 @@
+========================================================================
+LAPORAN SEGMENTASI 30 DETIK & ANALISIS AWAL SKEWNESS SQI (TAHAP 5)
+Berkas: Part_1.mat | Rekaman Uji: Indeks 0, 1, 2
+Frekuensi Sampling (fs): 125 Hz | Panjang Jendela: 30 detik (3750 sampel)
+========================================================================
+
+[1. RINGKASAN DATASET & SEGMENTASI PER REKAMAN]
+Rekaman 0:
+  - Status Rekaman     : VALID
+  - Total Durasi       : 488.0 s (61000 sampel)
+  - Jendela 30s Penuh  : 16 jendela
+  - Sisa Sampel        : 1000 sampel (8.00 s) diabaikan
+  - Total Puncak       : 994 puncak sistolik
+Rekaman 1:
+  - Status Rekaman     : VALID
+  - Total Durasi       : 488.0 s (61000 sampel)
+  - Jendela 30s Penuh  : 16 jendela
+  - Sisa Sampel        : 1000 sampel (8.00 s) diabaikan
+  - Total Puncak       : 966 puncak sistolik
+Rekaman 2:
+  - Status Rekaman     : VALID
+  - Total Durasi       : 400.0 s (50000 sampel)
+  - Jendela 30s Penuh  : 13 jendela
+  - Sisa Sampel        : 1250 sampel (10.00 s) diabaikan
+  - Total Puncak       : 766 puncak sistolik
+
+TOTAL JENDELA VALID KESELURUHAN: 45 jendela
+
+[2. RENTANG DAN DISTRIBUSI SKEWNESS SQI]
+Definisi Skewness (scipy.stats.skew):
+  Skewness = E[(x - mean)^3] / (std^3) (Fisher-Pearson standard coefficient, bias=True)
+- Skewness PPG Terfilter (sSQI):
+  * Rentang Nilai : 0.4254 s.d. 0.7016
+  * Rata-rata     : 0.5618
+  * Median        : 0.5689
+  * Standar Deviasi: 0.0515
+- Skewness PPG Mentah (Pembanding):
+  * Rentang Nilai : 0.2326 s.d. 0.6551
+  * Rata-rata     : 0.4942
+  * Median        : 0.5385
+  ANALISIS STATISTIK:
+  Filtering bandpass menstabilkan nilai skewness secara signifikan.
+  Pada sinyal mentah, baseline drift menyebabkan sebaran skewness lebar (0.23 - 0.65).
+  Setelah filtering, seluruh jendela memiliki skewness positif yang konsisten (~0.42 - 0.70).
+
+[3. EVALUASI KEWAJARAN SINYAL PER JENDELA]
+- Nilai Tidak Valid (NaN/Inf): 0 sampel (0.00%) pada seluruh 45 jendela.
+- Jumlah Puncak per Jendela 30s : Min = 55 | Max = 62 | Rata-rata = 59.4
+- Rentang Rata-rata IBI per Jendela: 481.3 ms s.d. 542.1 ms
+- Estimasi Heart Rate Rata-rata per Jendela: 110.7 s.d. 124.7 BPM
+  KESIMPULAN KEWAJARAN:
+  Seluruh 45 jendela pada ketiga rekaman ini memperlihatkan sinyal PPG yang sangat teratur,
+  tanpa ada flatline, artefak gerak parah, atau hilangnya denyut secara mendadak.
+
+[4. KEBERHASILAN SEGMENTASI & KETERBATASAN]
+1. Keberhasilan Segmentasi:
+   - Filtering continuous pada seluruh rekaman berhasil mencegah efek tepi per jendela.
+   - Pemetaan indeks puncak dari rekaman penuh ke dalam jendela berjalan akurat dan mulus.
+   - Tidak ada penggabungan data antar-rekaman yang berbeda.
+2. Keterbatasan yang Ditemukan:
+   - Homogenitas Kualitas: Ketiga rekaman awal ini semuanya memiliki kualitas sinyal yang sangat tinggi,
+     sehingga seluruh jendela menghasilkan sSQI positif yang ideal (> 0.40). Pada dataset penuh (3.000 rekaman),
+     dipastikan akan ada variasi rekaman dengan noise nyata atau pergeseran sensor.
+   - Keterbatasan Skewness Tunggal: Skewness positif menunjukkan morfologi pulsa khas, namun belum
+     menjamin bebas dari noise frekuensi tinggi minor atau saturasi sensor parsial.
+   - Batas Pemotongan: Sisa sampel (1000 sampel pada Rec 0 & 1, 1250 sampel pada Rec 2) diabaikan,
+     mengorbankan durasi 8-10 detik di ujung rekaman.
+========================================================================

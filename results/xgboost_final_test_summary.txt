@@ -1,0 +1,92 @@
+==========================================================================================
+LAPORAN RINGKASAN EVALUASI AKHIR MODEL XGBOOST PADA DATA TEST INDEPENDEN (TAHAP 10)
+Proyek : Estimasi Tekanan Darah Cuffless & Saturasi Oksigen Menggunakan XGBoost
+Waktu  : 2026-11-02 09:10:18
+Lokasi : C:\Codes\UNIVERSITY PROJECTS (UNPAD)\Metode Penelitian KTI\KTI_XGBoost\results\xgboost_final_test_summary.txt
+==========================================================================================
+
+[1. PERNYATAAN PROTOKOL PENGUJIAN FINAL TEST]
+------------------------------------------------------------------------------------------
+1. Data TEST dievaluasi SATU KALI SAJA setelah seluruh model, fitur, dan parameter dikunci di Tahap 9C.
+2. TIDAK ADA pelatihan ulang (retraining), tuning hyperparameter, seleksi fitur ulang, maupun pergantian model.
+3. Model yang digunakan:
+   - SBP : models/sbp_config_c.json (19 fitur, best_iteration=999)
+   - DBP : models/dbp_config_c.json (19 fitur, best_iteration=996)
+   - SpO2: models/spo2_config_d.json (2 fitur CFS: rise_time_s, max_ascending_slope; best_iteration=284)
+4. Baseline pembanding dihitung murni dari set TRAIN berpresisi penuh:
+   - SBP Baseline Mean Train: 130.2815 mmHg | Median Train: 128.5087 mmHg
+   - DBP Baseline Mean Train: 66.8701 mmHg | Median Train: 64.7086 mmHg
+   - SpO2 Baseline Mean Train: 95.2238 %  | Median Train: 96.0000 %
+
+[2. TABEL METRIK FINAL PADA DATA TEST]
+------------------------------------------------------------------------------------------
+Target | Model                          | N_samp  | MAE      | RMSE     | ME       | STD_ME   | R       | R2      | Imp_vs_Med
+------------------------------------------------------------------------------------------
+SBP    | XGBoost (Config C, 19 feats)   |  12,507 |  13.4191 |  17.4862 |  +1.4902 |  17.4232 |  0.6161 |  0.3739 |    +25.56%
+SBP    | Baseline (Mean TRAIN)          |  12,507 |  18.1315 |  22.1273 |  +1.1267 |  22.0994 |     N/A | -0.0026 |     -0.57%
+SBP    | Baseline (Median TRAIN)        |  12,507 |  18.0279 |  22.1080 |  -0.6461 |  22.0994 |     N/A | -0.0009 |     +0.00%
+DBP    | XGBoost (Config C, 19 feats)   |  12,507 |   6.4159 |   9.1516 |  -0.0169 |   9.1519 |  0.5742 |  0.3287 |    +23.17%
+DBP    | Baseline (Mean TRAIN)          |  12,507 |   8.4828 |  11.1725 |  -0.2621 |  11.1699 |     N/A | -0.0006 |     -1.59%
+DBP    | Baseline (Median TRAIN)        |  12,507 |   8.3505 |  11.4294 |  -2.4236 |  11.1699 |     N/A | -0.0471 |     +0.00%
+SPO2   | XGBoost (Config D, 2 feats CFS) |   4,706 |   1.7114 |   2.2018 |  +0.2146 |   2.1916 |  0.3781 |  0.1280 |     +8.42%
+SPO2   | Baseline (Mean TRAIN)          |   4,706 |   1.9218 |   2.3740 |  -0.2756 |   2.3582 |     N/A | -0.0137 |     -2.83%
+SPO2   | Baseline (Median TRAIN)        |   4,706 |   1.8688 |   2.4105 |  +0.5005 |   2.3582 |     N/A | -0.0451 |     +0.00%
+------------------------------------------------------------------------------------------
+
+[3. PERBANDINGAN FORMAL: HASIL VALIDASI (TAHAP 9C) VS HASIL TEST FINAL (TAHAP 10)]
+------------------------------------------------------------------------------------------
+  - SBP MAE  : Validation = 13.2203 mmHg -> TEST = 13.4191 mmHg (Selisih = +0.1988 mmHg)
+  - SBP RMSE : Validation = 17.2178 mmHg -> TEST = 17.4862 mmHg (Selisih = +0.2683 mmHg)
+  - DBP MAE  : Validation = 6.5667 mmHg -> TEST = 6.4159 mmHg (Selisih = -0.1508 mmHg)
+  - DBP RMSE : Validation = 9.0670 mmHg -> TEST = 9.1516 mmHg (Selisih = +0.0846 mmHg)
+  - SpO2 MAE : Validation = 1.6912 %    -> TEST = 1.7114 %    (Selisih = +0.0201 %)
+  - SpO2 RMSE: Validation = 2.0742 %    -> TEST = 2.2018 %    (Selisih = +0.1277 %)
+
+[4. ANALISIS KHUSUS DATASET UCI (SBP & DBP)]
+------------------------------------------------------------------------------------------
+  A. Statistik MAE per Record ID (N=1,433 record_id valid):
+     * SBP: Mean per-record MAE = 13.4327 mmHg | Median = 10.5573 mmHg
+            Rentang = [0.165, 76.844] mmHg | IQR = [5.696, 18.313]
+     * DBP: Mean per-record MAE = 6.8515 mmHg | Median = 5.1472 mmHg
+            Rentang = [0.037, 60.567] mmHg | IQR = [2.741, 8.970]
+  B. Performa SBP berdasarkan Rentang Nilai Acuan:
+     * low (<120 mmHg)     : N=4,712 ( 37.7%) | MAE=15.995 mmHg | ME=+15.373 mmHg
+     * mid (120-139 mmHg)  : N=3,926 ( 31.4%) | MAE= 7.167 mmHg | ME=+1.385 mmHg
+     * high (>=140 mmHg)   : N=3,869 ( 30.9%) | MAE=16.626 mmHg | ME=-15.311 mmHg
+  C. Performa DBP berdasarkan Rentang Nilai Acuan:
+     * low (<80 mmHg)      : N=10,986 ( 87.8%) | MAE= 5.187 mmHg | ME=+2.069 mmHg
+     * mid (80-89 mmHg)    : N=1,022 (  8.2%) | MAE= 9.267 mmHg | ME=-8.971 mmHg
+     * high (>=90 mmHg)    : N=  499 (  4.0%) | MAE=27.628 mmHg | ME=-27.600 mmHg
+  D. Catatan Ilmiah UCI:
+     - UCI tidak menyediakan identitas pasien (patient_id), sehingga partisi record-grouped TIDAK
+       menjamin independensi biologis antar-subjek.
+     - Hasil evaluasi jendela 30 detik ini TIDAK BOLEH diklaim memenuhi standar klinis AAMI/BHS
+       ataupun digunakan untuk mendiagnosis hipertensi secara klinis.
+
+[5. ANALISIS KHUSUS DATASET OSASUD (SPO2)]
+------------------------------------------------------------------------------------------
+  A. Performa per Pasien TEST Independen (N=5 pasien):
+     * Pasien  7: N= 970 | Ref=95.54% | Pred=95.43% | MAE=1.451% | RMSE=1.794% | ME=-0.108%
+     * Pasien  8: N= 943 | Ref=92.47% | Pred=95.37% | MAE=2.940% | RMSE=3.310% | ME=+2.898%
+     * Pasien 11: N= 779 | Ref=95.59% | Pred=95.73% | MAE=1.262% | RMSE=1.929% | ME=+0.137%
+     * Pasien 15: N= 889 | Ref=96.29% | Pred=95.11% | MAE=1.416% | RMSE=1.685% | ME=-1.181%
+     * Pasien 20: N=1125 | Ref=97.32% | Pred=96.72% | MAE=1.451% | RMSE=1.871% | ME=-0.600%
+     * Unweighted Average MAE per Pasien: 1.7039%
+     * Weighted Aggregate MAE seluruh Jendela: 1.7114%
+  B. Analisis Kasus Desaturasi Oksigen:
+     * <90% (Severe Desaturation)    : N=   32 ( 0.68%) | Ref=87.36% | Pred=95.39% | MAE=8.031% | ME=+8.031%
+     * 90% hingga <95% (Mild Desat)  : N= 1418 (30.13%) | Ref=92.78% | Pred=95.23% | MAE=2.485% | ME=+2.448%
+     * >=95% (Normoxemia)            : N= 3256 (69.19%) | Ref=96.76% | Pred=95.93% | MAE=1.312% | ME=-0.835%
+  C. Catatan Ilmiah OSASUD:
+     - Kasus SpO2 < 90% pada set TEST hanya berjumlah 32 jendela (0.68%), sehingga estimasi error
+       pada desaturasi berat memiliki ketidakpastian statistik tinggi.
+     - Model XGBoost menunjukkan kecenderungan regresi ke nilai rata-rata (regress-to-the-mean)
+       ketika saturasi referensi turun ke rentang hipoksemia berat.
+     - Nilai acuan OSASUD berasal dari sensor oksimeter pulse klinis, BUKAN SaO2 invasif (gas darah).
+
+[6. KESIMPULAN EVALUASI AKHIR]
+------------------------------------------------------------------------------------------
+1. Model SBP XGBoost mengungguli baseline median: MAE 13.4191 vs 18.0279 mmHg (+25.56% perbaikan).
+2. Model DBP XGBoost mengungguli baseline median: MAE 6.4159 vs 8.3505 mmHg (+23.17% perbaikan).
+3. Model SpO2 XGBoost mengungguli baseline median: MAE 1.7114 vs 1.8688 % (+8.42% perbaikan).
+4. Tidak ada degradasi katastropik antara validasi dan test, mengonfirmasi tidak adanya overfitting ekstrim.
